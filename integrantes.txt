@@ -1,3 +1,8 @@
 Matheus Moya de Oliveira - RM 562822
 Luisa Ganasevici de Abreu - RM 563403
 Ana Carolina Pereira Fontes - RM 562145
+
+Link do GitHub (contém o ReadMe com a descrição completa do projeto, prints e explicações do CRUD):
+https://github.com/matheusmoyaoliveira/cp4-java-mercado-express
+
+IDE utilizada para elaboração do projeto: IntelliJ
