@@ -247,7 +247,16 @@ Documentação automática dos endpoints, gerada via `springdoc-openapi`, dispon
 
 ## Deploy
 
-🔗 Link da aplicação em produção: *(a definir)*
+🔗 Link da aplicação em produção (Render): https://cp4-java-mercado-express.onrender.com
+
+Deploy realizado via **Docker** (Render não possui runtime nativo para Java), com um `Dockerfile` multi-stage: a primeira etapa compila o projeto com Maven, a segunda roda apenas o `.jar` final sobre uma imagem JRE enxuta.
+
+**Observações sobre o ambiente de produção:**
+- O plano utilizado é o **Free Tier** do Render, que hiberna a aplicação após períodos de inatividade — a primeira requisição após esse período pode demorar cerca de 1 minuto para responder, enquanto a instância "acorda".
+- O tamanho do pool de conexões do Hikari (`spring.datasource.hikari.maximum-pool-size`) foi reduzido explicitamente para respeitar o limite de sessões simultâneas (`SESSIONS_PER_USER`) da conta acadêmica no Oracle da FIAP.
+- Um endpoint `GET /` foi criado para servir como página inicial da API, retornando informações do projeto e um link HATEOAS para o recurso principal (`/mercado`) — reforçando o próprio princípio de navegabilidade da API já na porta de entrada.
+
+![Home](docs/prints/home.png)
 
 ---
 
