@@ -16,6 +16,22 @@ API REST para gerenciamento de produtos de um "mercado express", desenvolvida em
 
 ---
 
+## Índice
+
+1. [Tecnologias utilizadas](#tecnologias-utilizadas)
+2. [Arquitetura do projeto](#arquitetura-do-projeto)
+3. [Modelagem da entidade `Mercado`](#modelagem-da-entidade-mercado)
+4. [Configuração do banco de dados](#configuração-do-banco-de-dados)
+5. [O que é HATEOAS e por que foi usado](#o-que-é-hateoas-e-por-que-foi-usado)
+6. [Tratamento de erros](#tratamento-de-erros)
+7. [Endpoints](#endpoints)
+8. [Testes realizados (Postman)](#testes-realizados-postman--porta-8082)
+9. [Pré-requisitos e como executar localmente](#pré-requisitos-e-como-executar-localmente)
+10. [Segurança e boas práticas](#segurança-e-boas-práticas)
+11. [Deploy](#deploy)
+
+---
+
 ## Tecnologias utilizadas
 
 | Tecnologia | Versão | Finalidade |
@@ -113,6 +129,31 @@ Em vez de retornar apenas os dados do recurso, a API retorna também um campo `_
 ```
 
 Essa resposta é gerada com um `EntityModel<Mercado>`, que "embrulha" a entidade original com os links, sem alterar a classe `Mercado`. Os links são construídos de forma dinâmica com `linkTo(methodOn(...))`, apontando para os métodos reais do Controller — se uma rota mudar no futuro, o link se ajusta automaticamente.
+
+---
+
+## Tratamento de erros
+
+Erros de recurso não encontrado são tratados de forma centralizada, evitando que qualquer requisição malformada gere um `500 Internal Server Error` genérico. A exceção customizada `MercadoNotFoundException` é interceptada globalmente por um `@RestControllerAdvice`:
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MercadoNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMercadoNotFound(MercadoNotFoundException ex) {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("timestamp", LocalDateTime.now());
+        corpo.put("status", HttpStatus.NOT_FOUND.value());
+        corpo.put("erro", "Mercado não encontrado");
+        corpo.put("mensagem", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(corpo);
+    }
+}
+```
+
+Essa classe intercepta a exceção lançada por **qualquer** método do `MercadoController` (GET, PUT, PATCH, DELETE) que dependa de `buscarPorId`, centralizando o tratamento de erro num único lugar em vez de repetir `try/catch` em cada endpoint.
 
 ---
 
@@ -235,13 +276,28 @@ Documentação automática dos endpoints, gerada via `springdoc-openapi`, dispon
 
 ---
 
-## Como executar o projeto localmente
+## Pré-requisitos e como executar localmente
 
+**Pré-requisitos:**
+- Java 21 (JDK)
+- Maven (ou usar o `./mvnw` incluso no projeto, que não exige instalação separada)
+- Acesso ao banco Oracle FIAP (`ORACLE_FIAP`), com usuário e senha válidos
+- Postman ou Insomnia, para testar os endpoints
+
+**Passos:**
 1. Clone o repositório
-2. Configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do Oracle FIAP
+2. Configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do Oracle FIAP (via Run Configuration da IDE ou variáveis de sistema)
 3. Execute a classe `MercadoExpressApplication`
 4. A aplicação sobe em `http://localhost:8082`
 5. Importe os endpoints no Postman/Insomnia usando a base `http://localhost:8082/mercado`
+
+---
+
+## Segurança e boas práticas
+
+- **Nenhuma credencial é versionada no código.** Usuário e senha do Oracle são lidos via variáveis de ambiente (`${DB_USERNAME}`, `${DB_PASSWORD}`), tanto localmente (Run Configuration da IDE) quanto em produção (painel de variáveis do Render).
+- **O `.gitignore` cobre a pasta `.idea/`**, evitando que arquivos de configuração local da IDE (que podem conter credenciais em texto puro, como Run Configurations) sejam versionados.
+- **Pool de conexões limitado explicitamente** (`spring.datasource.hikari.maximum-pool-size`), respeitando o limite de sessões simultâneas de contas acadêmicas no Oracle da FIAP.
 
 ---
 
