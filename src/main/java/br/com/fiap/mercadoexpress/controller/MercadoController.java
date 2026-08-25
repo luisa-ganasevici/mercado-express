@@ -51,7 +51,8 @@ public class MercadoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<Mercado>> atualizar(@PathVariable Long id, @RequestBody Mercado mercado) {
+    public ResponseEntity<EntityModel<Mercado>> atualizar(@PathVariable Long id,
+                                                          @RequestBody Mercado mercado) {
         Mercado mercadoAtualizado = mercadoService.atualizar(id, mercado);
         return ResponseEntity.ok(paraEntityModel(mercadoAtualizado));
     }
