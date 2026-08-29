@@ -22,6 +22,8 @@ public class SecurityTestController {
     return "<h1>Rota privada </h1>";
     }
 
+    @GetMapping("/home")
+        String retornohtml() { return "index"; }
 
 
 }
