@@ -19,7 +19,7 @@ public class SecurityController {
     @GetMapping("/home/privado")
     @ResponseBody
         String rotaPrivada (){
-    return "<h1>Rota privada </h1>";
+    return "privado";
     }
 
     @GetMapping("/home")
