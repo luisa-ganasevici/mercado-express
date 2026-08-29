@@ -7,16 +7,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 
 @Controller
-public class SecurityTestController {
+public class SecurityController {
 
-    @GetMapping("/publico")
+    @GetMapping("/home/publico")
     @ResponseBody
         String rotaPublica(){
     return "<h1>Rota publica </h1>";
 }
 
 
-    @GetMapping("/privado")
+    @GetMapping("/home/privado")
     @ResponseBody
         String rotaPrivada (){
     return "<h1>Rota privada </h1>";
@@ -24,6 +24,8 @@ public class SecurityTestController {
 
     @GetMapping("/home")
         String retornohtml() { return "index"; }
+
+
 
 
 }
