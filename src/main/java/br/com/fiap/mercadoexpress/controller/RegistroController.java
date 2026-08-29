@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 
@@ -22,7 +23,18 @@ public class RegistroController {
 
     @GetMapping("/cadastro")
     public String cadastroUsuario(Model model){
-        model.addAttribute("chave", new Usuario()); //ta retornando o cadastro.html
+        model.addAttribute("usuario", new Usuario()); //ta retornando o cadastro.html
         return "cadastro";
+    }
+
+    @PostMapping("/cadastro")
+
+    public String usuario(@ModelAttribute Usuario usuario){
+
+       usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+       usuarioRepository.save(usuario);
+       return "redirect:/login";
+
+
     }
 }

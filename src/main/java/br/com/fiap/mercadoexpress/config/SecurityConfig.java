@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
         @Bean
         public SecurityFilterChain publico(HttpSecurity http) throws Exception {
             return http.authorizeHttpRequests(authorizeConfig -> {
-                authorizeConfig.requestMatchers("/home/publico").permitAll();
+                authorizeConfig.requestMatchers("/home/publico", "/cadastro").permitAll();
 
                 authorizeConfig.requestMatchers("/logout").permitAll();
 
@@ -25,7 +25,10 @@ import org.springframework.security.web.SecurityFilterChain;
             }).formLogin(form -> form.defaultSuccessUrl("/home",
                     true)).build();
 
+
+
         }
+
 
         @Bean
         public PasswordEncoder passwordEncoder(){
