@@ -34,6 +34,7 @@ public class MercadoService {
         mercado.setSetor(mercadoAtualizado.getSetor());
         mercado.setTamanho(mercadoAtualizado.getTamanho());
         mercado.setPreco(mercadoAtualizado.getPreco());
+        mercado.setEstoque(mercadoAtualizado.getEstoque());
         return mercadoRepository.save(mercado);
     }
 
@@ -45,6 +46,7 @@ public class MercadoService {
         if (mercadoParcial.getSetor() != null) mercado.setSetor(mercadoParcial.getSetor());
         if (mercadoParcial.getTamanho() != null) mercado.setTamanho(mercadoParcial.getTamanho());
         if (mercadoParcial.getPreco() != null) mercado.setPreco(mercadoParcial.getPreco());
+        if (mercadoParcial.getEstoque() != null) mercado.setEstoque(mercadoParcial.getEstoque());
 
         return mercadoRepository.save(mercado);
     }

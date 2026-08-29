@@ -27,11 +27,15 @@ public class Mercado {
     private String tipo;
 
     @Column(name = "Setor")
-    private String setor;
+    private     String setor;
 
     @Column(name = "Tamanho")
     private String tamanho;
 
     @Column(name = "Preco", precision = 10, scale = 2)
     private BigDecimal preco;
+
+    @Column(name = "Estoque")
+    private Integer estoque;
+
 }
