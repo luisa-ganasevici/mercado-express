@@ -1,21 +1,25 @@
 package br.com.fiap.mercadoexpress.controller;
 
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-@RestController
+
+@Controller
 public class SecurityTestController {
 
-@GetMapping(name = "/publico")
-    String rotaPublica(){
-    return "<h1>Rota publica <h1>";
+    @GetMapping("/publico")
+    @ResponseBody
+        String rotaPublica(){
+    return "<h1>Rota publica </h1>";
 }
 
 
-    @GetMapping(name = "/privado ")
+    @GetMapping("/privado")
+    @ResponseBody
         String rotaPrivada (){
-    return "<h1>Rota privada <h1>";
+    return "<h1>Rota privada </h1>";
     }
 
 
