@@ -9,20 +9,21 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
+    @Configuration
+    @EnableWebSecurity
+    public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain publico (HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests( authorizeConfig -> {
-            authorizeConfig.requestMatchers("/home/publico").permitAll();
+        @Bean
+        public SecurityFilterChain publico (HttpSecurity http) throws Exception {
+            return http.authorizeHttpRequests( authorizeConfig -> {
+                authorizeConfig.requestMatchers("/home/publico").permitAll();
 
-            authorizeConfig.requestMatchers("/logout").permitAll();
+                authorizeConfig.requestMatchers("/logout").permitAll();
 
-            authorizeConfig.anyRequest().authenticated();
-        }).formLogin(Customizer.withDefaults()).build();
+                authorizeConfig.anyRequest().authenticated();
+            }).formLogin(form -> form.defaultSuccessUrl("/home",
+                    true)).build();
+
+        }
 
     }
-
-}
