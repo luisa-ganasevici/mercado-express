@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -52,12 +49,18 @@ public class MercadoWebController {
         return "produto-comprar";
     }
     @PostMapping("/produtos/{id}/comprar")
-    public String comprar(@PathVariable Long id) {
+    public String comprar(@PathVariable Long id, @RequestParam Integer quantidade, Model model) {
         Mercado mercado = mercadoService.buscarPorId(id);
-        int novaQuantidade = mercado.getEstoque() - 1;
+
+        if (quantidade == null || quantidade <= 0 || quantidade > mercado.getEstoque()) {
+            model.addAttribute("mercado", mercado);
+            model.addAttribute("erro", "Quantidade indisponível em estoque.");
+            return "produto-comprar";
+        }
+
+        int novaQuantidade = mercado.getEstoque() - quantidade;
         mercadoService.atualizarEstoque(id, novaQuantidade);
         return "redirect:/produtos";
     }
-
 
 }
