@@ -26,4 +26,7 @@ import lombok.NoArgsConstructor;
         @Column(name = "password")
         private String password;
 
+        @Column (name = "Role")
+        private String role;
+
     }

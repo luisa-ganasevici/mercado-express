@@ -31,11 +31,10 @@ public class RegistroController {
 
     public String usuario(@ModelAttribute Usuario usuario){
 
-       usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); //o encode criptografa a senha no banco
-       usuarioRepository.save(usuario);
-       return "redirect:/login";
-
-
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuario.setRole("CLIENTE");
+        usuarioRepository.save(usuario);
+        return "redirect:/login";
     }
 
     @GetMapping("/login")

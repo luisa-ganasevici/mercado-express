@@ -38,4 +38,9 @@ public class Mercado {
     @Column(name = "Estoque")
     private Integer estoque;
 
+    @Column (name = "Cor")
+    private String cor;
+
+    @Column (name = "Disponivel")
+    private Boolean disponivel = true;
 }

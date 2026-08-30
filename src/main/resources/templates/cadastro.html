@@ -7,6 +7,7 @@
 <body>
 
 <h1>Cadastro de Usuário</h1>
+<p>Cadastre-se!</p>
 <form th:action="@{/cadastro}" method="post" th:object="${usuario}">
   <label>Usuário</label><br>
   <input type="text" th:field="*{username}" required><br>
