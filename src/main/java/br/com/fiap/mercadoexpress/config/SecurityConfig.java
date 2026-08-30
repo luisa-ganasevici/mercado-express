@@ -18,15 +18,15 @@ import org.springframework.web.bind.annotation.GetMapping;
         @Bean
         public SecurityFilterChain publico(HttpSecurity http) throws Exception {
             return http.authorizeHttpRequests(authorizeConfig -> {
-                authorizeConfig.requestMatchers("/", "/home", "/home/publico", "/cadastro").permitAll();
+                authorizeConfig.requestMatchers("/api", "/home", "/home/publico", "/cadastro").permitAll();
 
                 authorizeConfig.requestMatchers("/logout").permitAll();
 
                 authorizeConfig.requestMatchers("/login").permitAll();
 
                 authorizeConfig.anyRequest().authenticated();
-            }).formLogin(form -> form.loginPage("/login")
-                    .defaultSuccessUrl("/home",
+            }).formLogin(form -> form.loginPage("/home")
+                    .defaultSuccessUrl("/home/publico",
                     true)).build();
 
         }
