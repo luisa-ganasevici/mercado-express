@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
         public SecurityFilterChain publico(HttpSecurity http) throws Exception {
             return http.authorizeHttpRequests(authorizeConfig -> {
                 authorizeConfig.requestMatchers("/api", "/home",
-                        "/home/publico", "/cadastro", "/login", "/logout").permitAll();
+                        "/home/publico", "/cadastro", "/login", "/logout", "/whoami").permitAll();
 
                 authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
                         "/mercado", "/mercado/{id}").permitAll();

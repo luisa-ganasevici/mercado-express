@@ -26,4 +26,16 @@
             String retornohtml() { return "index"; }
 
 
+
+        @GetMapping("/whoami")
+        @ResponseBody
+        public String whoami(org.springframework.security.core.Authentication authentication) {
+            if (authentication == null) {
+                return "authentication é NULL";
+            }
+            return "Nome: " + authentication.getName()
+                    + " | Autenticado: " + authentication.isAuthenticated()
+                    + " | Authorities: " + authentication.getAuthorities();
+        }
     }
+

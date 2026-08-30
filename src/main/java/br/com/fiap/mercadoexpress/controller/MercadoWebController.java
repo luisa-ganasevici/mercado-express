@@ -19,10 +19,17 @@ public class MercadoWebController {
     private final MercadoService mercadoService;
 
     @GetMapping("/produtos")
-    public String getProdutos(Model model) {
+    public String getProdutos(Model model, Authentication authentication) {
         List<Mercado> listaProdutos = mercadoService.listarTodos();
-        model.addAttribute("produto", listaProdutos);
+        model.addAttribute("produtos", listaProdutos);
+        model.addAttribute("isAdmin", isAdmin(authentication));
         return "produtos";
+    }
+
+    @GetMapping("/produtos/novo")
+    public String formNovoProduto(Model model) {
+        model.addAttribute("mercado", new Mercado());
+        return "produto-form";
     }
 
     @PostMapping("/produtos")

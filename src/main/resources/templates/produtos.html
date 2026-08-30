@@ -12,6 +12,10 @@
     <button type="button">Voltar</button>
 </a>
 
+<a th:if="${isAdmin}" th:href="@{/produtos/novo}">
+    <button type="button">Novo produto</button>
+</a>
+
 <a th:if="${isAdmin}" th:href="@{/usuarios}">
     <button type="button">Gerenciar usuários</button>
 </a>
