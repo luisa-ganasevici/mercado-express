@@ -23,7 +23,7 @@ public class RegistroController {
 
     @GetMapping("/cadastro")
     public String cadastroUsuario(Model model){
-        model.addAttribute("usuario", new Usuario()); //ta retornando o cadastro.html
+        model.addAttribute("usuario", new Usuario()); //o return é a pgn html
         return "cadastro";
     }
 
@@ -31,10 +31,15 @@ public class RegistroController {
 
     public String usuario(@ModelAttribute Usuario usuario){
 
-       usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+       usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); //o encode criptografa a senha no banco
        usuarioRepository.save(usuario);
        return "redirect:/login";
 
 
     }
+
+    @GetMapping("/login")
+
+    public String login(){ return "login";} //chamando classe html
+
 }

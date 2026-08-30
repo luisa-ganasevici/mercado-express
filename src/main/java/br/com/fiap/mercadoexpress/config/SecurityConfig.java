@@ -9,8 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.bind.annotation.GetMapping;
 
-    @Configuration
+@Configuration
     @EnableWebSecurity
     public class SecurityConfig {
 
@@ -21,11 +22,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
                 authorizeConfig.requestMatchers("/logout").permitAll();
 
+                authorizeConfig.requestMatchers("/login").permitAll();
+
                 authorizeConfig.anyRequest().authenticated();
-            }).formLogin(form -> form.defaultSuccessUrl("/home",
+            }).formLogin(form -> form.loginPage("/login")
+                    .defaultSuccessUrl("/home",
                     true)).build();
-
-
 
         }
 
@@ -36,3 +38,6 @@ import org.springframework.security.web.SecurityFilterChain;
         }
 
     }
+
+
+
