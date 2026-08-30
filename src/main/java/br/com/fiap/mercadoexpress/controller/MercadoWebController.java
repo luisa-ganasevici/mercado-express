@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
@@ -42,5 +43,18 @@ public class MercadoWebController {
         if (authentication == null) return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")); //autenticacao para adms
+    }
+
+    @GetMapping("/produtos/{id}/comprar")
+    public String formComprar(@PathVariable Long id, Model model) {
+        model.addAttribute("mercado", mercadoService.buscarPorId(id));
+        return "produto-comprar";
+    }
+    @PostMapping("/produtos/{id}/comprar")
+    public String comprar(@PathVariable Long id) {
+        Mercado mercado = mercadoService.buscarPorId(id);
+        int novaQuantidade = mercado.getEstoque() - 1;
+        mercadoService.atualizarEstoque(id, novaQuantidade);
+        return "redirect:/produtos";
     }
 }
