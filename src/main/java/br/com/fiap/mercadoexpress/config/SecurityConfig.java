@@ -35,11 +35,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 
                 authorizeConfig.anyRequest().authenticated();
             }).formLogin(form -> form.loginPage("/home")
+                            .loginProcessingUrl("/login")
                             .defaultSuccessUrl("/home/publico", false))
                     .exceptionHandling(ex -> ex.accessDeniedPage("/acesso-negado"))
                     .build();
         }
-
 
         @Bean
         public PasswordEncoder passwordEncoder(){
