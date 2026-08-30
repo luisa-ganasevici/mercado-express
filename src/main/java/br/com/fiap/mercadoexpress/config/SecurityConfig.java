@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
                 authorizeConfig.requestMatchers("/produtos/**").hasRole("ADMIN");
 
+                authorizeConfig.requestMatchers("/usuarios/**").hasRole("ADMIN");
+
                 authorizeConfig.anyRequest().authenticated();
             }).formLogin(form -> form.loginPage("/home")
                             .loginProcessingUrl("/login")
