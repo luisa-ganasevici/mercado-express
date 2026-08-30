@@ -20,7 +20,7 @@ public class MercadoWebController {
     @GetMapping("/produtos")
     public String getProdutos(Model model) {
         List<Mercado> listaProdutos = mercadoService.listarTodos();
-        model.addAttribute("getProdutos", listaProdutos);
+        model.addAttribute("produto", listaProdutos);
         return "produtos";
     }
 

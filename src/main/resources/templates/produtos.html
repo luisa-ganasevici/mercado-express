@@ -1,10 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Produtos - Mercado Express</title>
 </head>
 <body>
+
+<h1>Produtos</h1>
+
+<a th:href="@{/home}">
+    <button type="button">Voltar</button>
+</a>
+
+<form th:action="@{/produtos}" method="get">
+    <input type="text" name="nome" placeholder="Buscar produto..." />
+    <button type="submit">Buscar</button>
+</form>
+
+<table border="1" cellpadding="8">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Tipo</th>
+        <th>Setor</th>
+        <th>Tamanho</th>
+        <th>Preço</th>
+        <th>Estoque</th>
+        <th>Disponível</th>
+        <th>Ação</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="produto : ${produtos}">
+        <td th:text="${produto.nome}"></td>
+        <td th:text="${produto.tipo}"></td>
+        <td th:text="${produto.setor}"></td>
+        <td th:text="${produto.tamanho}"></td>
+        <td th:text="${produto.preco}"></td>
+        <td th:text="${produto.estoque}"></td>
+        <td th:text="${produto.disponivel} ? 'Sim' : 'Não'"></td>
+        <td>
+            <a th:if="${produto.disponivel}" th:href="@{/produtos/{id}/comprar(id=${produto.id})}">
+                <button type="button">Comprar</button>
+            </a>
+            <span th:unless="${produto.disponivel}">Indisponível</span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${produtos == null or #lists.isEmpty(produtos)}">Nenhum produto encontrado.</p>
 
 </body>
 </html>
