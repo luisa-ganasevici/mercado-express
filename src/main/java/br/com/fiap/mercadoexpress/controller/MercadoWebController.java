@@ -24,6 +24,7 @@ public class MercadoWebController {
         List<Mercado> listaProdutos = mercadoService.listarTodos();
         model.addAttribute("produtos", listaProdutos);
         model.addAttribute("isAdmin", isAdmin(authentication));
+        model.addAttribute("logado", authentication != null && authentication.isAuthenticated());
         return "produtos";
     }
 
@@ -57,4 +58,6 @@ public class MercadoWebController {
         mercadoService.atualizarEstoque(id, novaQuantidade);
         return "redirect:/produtos";
     }
+
+
 }

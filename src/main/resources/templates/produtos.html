@@ -8,7 +8,7 @@
 
 <h1>Produtos</h1>
 
-<a th:href="@{/home}">
+<a th:href="@{/home/privado}">
     <button type="button">Voltar</button>
 </a>
 
@@ -56,6 +56,12 @@
     </tr>
     </tbody>
 </table>
+<a th:if="${logado}" th:href="@{/home/privado}">
+    <button type="button">Voltar</button>
+</a>
+<a th:unless="${logado}" th:href="@{/home}">
+    <button type="button">Voltar</button>
+</a>
 
 <p th:if="${produtos == null or #lists.isEmpty(produtos)}">Nenhum produto encontrado.</p>
 
