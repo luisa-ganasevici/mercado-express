@@ -12,6 +12,10 @@
     <button type="button">Voltar</button>
 </a>
 
+<a th:if="${isAdmin}" th:href="@{/usuarios}">
+    <button type="button">Gerenciar usuários</button>
+</a>
+
 <form th:action="@{/produtos}" method="get">
     <input type="text" name="nome" placeholder="Buscar produto..." />
     <button type="submit">Buscar</button>
