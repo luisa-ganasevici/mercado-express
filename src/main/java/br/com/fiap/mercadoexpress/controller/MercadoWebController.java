@@ -5,6 +5,9 @@ import br.com.fiap.mercadoexpress.entity.Mercado;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import br.com.fiap.mercadoexpress.service.MercadoService;
@@ -17,14 +20,16 @@ public class MercadoWebController {
 
     private final MercadoService mercadoService;
 
-    @RequestMapping("/produtos")
-    public String produtos(Model model) {
+
+    @GetMapping("/produtos")
+    public String getProdutos(Model model) {
         List<Mercado> listaProdutos = mercadoService.listarTodos();
-
-        model.addAttribute("produtos", listaProdutos);
-
+        model.addAttribute("getProdutos", listaProdutos);
         return "produtos";
-
-
     }
+}
+    @PostMapping("/produtos")
+    public String criarProduto(@ModelAttribute Mercado mercado) {
+        mercadoService.criar(mercado);
+        return "redirect:/produtos";
 }
