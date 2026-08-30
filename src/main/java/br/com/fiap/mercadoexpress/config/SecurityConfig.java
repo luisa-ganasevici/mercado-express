@@ -4,6 +4,7 @@ package br.com.fiap.mercadoexpress.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,18 +19,25 @@ import org.springframework.web.bind.annotation.GetMapping;
         @Bean
         public SecurityFilterChain publico(HttpSecurity http) throws Exception {
             return http.authorizeHttpRequests(authorizeConfig -> {
-                authorizeConfig.requestMatchers("/api", "/home","/home/produtos","/produtos",
-                        "/home/publico", "/cadastro").permitAll();
+                authorizeConfig.requestMatchers("/api", "/home",
+                        "/home/publico", "/cadastro", "/login", "/logout").permitAll();
 
-                authorizeConfig.requestMatchers("/logout").permitAll();
+                authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
+                        "/mercado", "/mercado/{id}").permitAll();
 
-                authorizeConfig.requestMatchers("/login").permitAll();
+                authorizeConfig.requestMatchers("/produtos/{id}/comprar").authenticated();
+
+                authorizeConfig.requestMatchers("/produtos/**").hasRole("ADMIN"); //so permitir para adm, qualquer
+                                                                                            //coisa dps da rota mencionada
+                authorizeConfig.requestMatchers("/mercado/**").hasRole("ADMIN");
+
+
 
                 authorizeConfig.anyRequest().authenticated();
             }).formLogin(form -> form.loginPage("/home")
-                    .defaultSuccessUrl("/home/publico",
-                    true)).build();
-
+                            .defaultSuccessUrl("/home/publico", false))
+                    .exceptionHandling(ex -> ex.accessDeniedPage("/acesso-negado"))
+                    .build();
         }
 
 
