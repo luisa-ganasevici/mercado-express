@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>Mercado Express</title>
 </head>
 <body>
-<h1>Home</h1>
+<h1>Bem-vindo ao Mercado Express</h1>
 
-<form th:action="@{/logout}" method="post">
-    <button type="submit">Logout</button>
-</form>
+<a th:href="@{/produtos}">
+    <button type="button">Ver produtos</button>
+</a>
+
+<a th:href="@{/login}">
+    <button type="button">Entrar</button>
+</a>
+
+<a th:href="@{/cadastro}">
+    <button type="button">Cadastrar</button>
+</a>
 </body>
 </html>
