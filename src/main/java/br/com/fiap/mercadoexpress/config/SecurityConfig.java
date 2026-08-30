@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.GetMapping;
                                                                                             //coisa dps da rota mencionada
                 authorizeConfig.requestMatchers("/mercado/**").hasRole("ADMIN");
 
-
+                authorizeConfig.requestMatchers("/produtos/**").hasRole("ADMIN");
 
                 authorizeConfig.anyRequest().authenticated();
             }).formLogin(form -> form.loginPage("/home")
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.GetMapping;
                             .defaultSuccessUrl("/home/privado", true))
                     .exceptionHandling(ex -> ex.accessDeniedPage("/acesso-negado"))
                     .build();
+
         }
 
         @Bean

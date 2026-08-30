@@ -63,4 +63,22 @@ public class MercadoWebController {
         return "redirect:/produtos";
     }
 
+    @GetMapping("/produtos/editar")
+    public String formEditar(@RequestParam Long id, Model model) {
+        model.addAttribute("mercado", mercadoService.buscarPorId(id));
+        return "produto-editar";
+    }
+
+    @PostMapping("/produtos/{id}/editar")
+    public String editarProduto(@PathVariable Long id, @ModelAttribute Mercado mercado) {
+        mercadoService.atualizar(id, mercado);
+        return "redirect:/produtos";
+    }
+
+    @PostMapping("/produtos/{id}/estoque")
+    public String atualizarEstoqueRapido(@PathVariable Long id, @RequestParam Integer estoque) {
+        mercadoService.atualizarEstoque(id, estoque);
+        return "redirect:/produtos";
+    }
+
 }
