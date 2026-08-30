@@ -10,10 +10,9 @@
     public class SecurityController {
 
         @GetMapping("/home/publico")
-        @ResponseBody
-            String rotaPublica(){
-        return "<h1>Rota publica </h1>";
-    }
+        public String rotaPublica(){
+            return "logado";
+        }
 
 
         @GetMapping("/home/privado")
