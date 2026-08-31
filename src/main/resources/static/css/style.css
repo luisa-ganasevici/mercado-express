@@ -1,0 +1,194 @@
+
+.voltar-topo {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+}
+body {
+    background-color: #696969;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    text-align: center;
+}
+
+
+button {
+    background-color: #6495ED;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 15px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #4a7fd6;
+}
+
+
+.botoes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+
+table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #808080;
+    color: #ffffff;
+}
+
+table th, table td {
+    padding: 10px 16px;
+    text-align: center;
+    border: 1px solid #ffffff;
+}
+
+table th {
+    background-color: #5a5a5a;
+}
+
+
+form {
+    max-width: 400px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+form label {
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="number"] {
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+}
+
+
+a {
+    text-decoration: none;
+}
+
+
+p[style*="color:red"], p[style*="color: red"] {
+    text-align: center;
+}
+
+
+.auth-topo {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+
+.hero {
+    max-width: 700px;
+    margin: 80px auto 0;
+    text-align: center;
+    padding: 0 20px;
+}
+
+.hero h1 {
+    margin-bottom: 20px;
+}
+
+
+.divisor {
+    border: none;
+    border-top: 2px solid #ffffff;
+    width: 60%;
+    margin: 0 auto 30px;
+}
+
+
+.hero p {
+    line-height: 1.6;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+
+.btn-destaque {
+    font-size: 17px;
+    padding: 12px 28px;
+    margin-top: 15px;
+}
+
+
+.cadastro-link {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.cadastro-link p {
+    margin-bottom: 10px;
+}
+
+
+.titulo-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto 10px;
+    padding: 0 20px;
+}
+
+.titulo-linha h1 {
+    margin: 0;
+}
+
+
+.dados-produto {
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+
+.acoes-compra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.acoes-compra button {
+    margin: 0;
+}
+
+.btn-destaque {
+    font-size: 17px;
+    padding: 12px 28px;
+}
+
+.logout-topo {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <title>Comprar Produto - Mercado Express</title>
+</head>
+<body>
+
+<h1>Confirmar Compra</h1>
+<hr class="divisor">
+
+<p th:if="${erro}" style="color:red; text-align:center;" th:text="${erro}"></p>
+
+<div class="dados-produto">
+  <p><strong>Nome:</strong> <span th:text="${mercado.nome}"></span></p>
+  <p><strong>Tipo:</strong> <span th:text="${mercado.tipo}"></span></p>
+  <p><strong>Cor:</strong> <span th:text="${mercado.cor}"></span></p>
+  <p><strong>Tamanho:</strong> <span th:text="${mercado.tamanho}"></span></p>
+  <p><strong>Preço:</strong> <span th:text="${mercado.preco}"></span></p>
+  <p><strong>Estoque disponível:</strong> <span th:text="${mercado.estoque}"></span></p>
+</div>
+
+<form id="form-compra" th:action="@{/produtos/{id}/comprar(id=${mercado.id})}" method="post">
+  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+  <label>Quantidade</label><br>
+  <input type="number" name="quantidade" min="1" th:max="${mercado.estoque}" value="1" required>
+</form>
+
+<div class="acoes-compra">
+  <a th:href="@{/produtos}">
+    <button type="button">Cancelar</button>
+  </a>
+  <button type="submit" form="form-compra" class="btn-destaque">Confirmar compra</button>
+</div>
+
+</body>
+</html>

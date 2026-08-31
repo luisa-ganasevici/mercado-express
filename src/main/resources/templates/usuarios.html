@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <title>Usuários - Mercado Express</title>
+</head>
+<body>
+
+<div class="voltar-topo">
+  <a th:href="@{/produtos}"><button type="button">Voltar</button></a>
+</div>
+
+<h1>Usuários</h1>
+<hr class="divisor">
+
+<p th:if="${param.erro != null}" style="color:red; text-align:center;">
+  Não é possível remover a permissão de admin da sua própria conta.
+</p>
+
+<table border="1" cellpadding="8">
+  <thead>
+  <tr>
+    <th>Usuário</th>
+    <th>Role</th>
+    <th>Ação</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="usuario : ${usuarios}">
+    <td th:text="${usuario.username}"></td>
+    <td th:text="${usuario.role}"></td>
+    <td>
+      <form th:if="${usuario.role != 'ADMIN'}"
+            th:action="@{/usuarios/{id}/promover(id=${usuario.id})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit">Promover a ADMIN</button>
+      </form>
+
+      <form th:if="${usuario.role == 'ADMIN'}"
+            th:action="@{/usuarios/{id}/rebaixar(id=${usuario.id})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit">Remover admin</button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

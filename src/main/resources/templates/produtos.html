@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Produtos - Mercado Express</title>
+</head>
+<body>
+
+<div class="voltar-topo">
+    <a th:if="${logado}" th:href="@{/home/privado}">
+        <button type="button">Voltar</button>
+    </a>
+    <a th:unless="${logado}" th:href="@{/home}">
+        <button type="button">Voltar</button>
+    </a>
+</div>
+
+<h1>Produtos</h1>
+<hr class="divisor">
+
+<div class="botoes">
+    <a th:if="${isAdmin}" th:href="@{/produtos/novo}">
+        <button type="button">Novo produto</button>
+    </a>
+
+    <a th:if="${isAdmin}" th:href="@{/usuarios}">
+        <button type="button">Gerenciar usuários</button>
+    </a>
+</div>
+
+<form th:action="@{/produtos}" method="get">
+    <input type="text" name="nome" placeholder="Buscar produto..." />
+    <button type="submit">Buscar</button>
+</form>
+
+<table border="1" cellpadding="8">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Tipo</th>
+        <th>Setor</th>
+        <th>Tamanho</th>
+        <th>Preço</th>
+        <th>Estoque</th>
+        <th>Disponível</th>
+        <th>Ação</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="produto : ${produtos}">
+        <td th:text="${produto.nome}"></td>
+        <td th:text="${produto.tipo}"></td>
+        <td th:text="${produto.setor}"></td>
+        <td th:text="${produto.tamanho}"></td>
+        <td th:text="${produto.preco}"></td>
+        <td th:text="${produto.estoque}"></td>
+        <td th:text="${produto.disponivel} ? 'Sim' : 'Não'"></td>
+        <td>
+            <a th:if="${produto.disponivel}" th:href="@{/produtos/{id}/comprar(id=${produto.id})}">
+                <button type="button">Comprar</button>
+            </a>
+            <span th:unless="${produto.disponivel}">Indisponível</span>
+
+            <span th:if="${isAdmin}">
+                <form th:action="@{/produtos/{id}/excluir(id=${produto.id})}" method="post" style="display:inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit">Excluir</button>
+                </form>
+            </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${produtos == null or #lists.isEmpty(produtos)}">Nenhum produto encontrado.</p>
+
+<div th:if="${isAdmin}">
+    <h3>Editar produto</h3>
+    <form th:action="@{/produtos/editar}" method="get">
+        <select name="id" required>
+            <option value="" disabled selected>Selecione um produto</option>
+            <option th:each="produto : ${produtos}"
+                    th:value="${produto.id}"
+                    th:text="${produto.nome}">
+            </option>
+        </select>
+        <button type="submit">Editar</button>
+    </form>
+</div>
+
+</body>
+</html>

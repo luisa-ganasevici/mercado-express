@@ -2,8 +2,9 @@ package br.com.fiap.mercadoexpress.controller;
 
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,10 +14,15 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 
 
-@RestController
+@Controller
 public class HomeController {
 
     @GetMapping("/")
+    public String raiz() {
+        return "redirect:/home";
+    }
+
+    @GetMapping("/api")
     public ResponseEntity<EntityModel<Map<String, String>>> home() {
         Map<String, String> info = new LinkedHashMap<>();
         info.put("projeto", "Mercado Express API");

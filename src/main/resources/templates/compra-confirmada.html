@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <title>Compra Confirmada - Mercado Express</title>
+</head>
+<body>
+
+<div class="titulo-bloco">
+  <h1>Compra confirmada!</h1>
+  <hr class="divisor">
+</div>
+
+<div class="dados-produto">
+  <p>Você comprou <strong th:text="${quantidade}"></strong> unidade(s) de
+    <strong th:text="${mercado.nome}"></strong>.</p>
+  <p><strong>Preço unitário:</strong> <span th:text="${mercado.preco}"></span></p>
+</div>
+
+<div class="botoes">
+  <a th:href="@{/produtos}">
+    <button type="button">Voltar aos produtos</button>
+  </a>
+</div>
+
+</body>
+</html>
