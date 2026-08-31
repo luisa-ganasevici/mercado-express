@@ -61,6 +61,12 @@ public class MercadoWebController {
         return "compra-confirmada";
     }
 
+    @PostMapping("/produtos/{id}/excluir")
+    public String excluirProduto(@PathVariable Long id) {
+        mercadoService.marcarIndisponivel(id);
+        return "redirect:/produtos";
+    }
+
     @GetMapping("/produtos/editar")
     public String formEditar(@RequestParam Long id, Model model) {
         model.addAttribute("mercado", mercadoService.buscarPorId(id));
