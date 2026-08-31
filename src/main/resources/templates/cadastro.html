@@ -2,12 +2,22 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
   <title>Cadastro</title>
 </head>
 <body>
 
+<div class="voltar-topo">
+  <a th:href="@{/home}">
+    <button type="button">Voltar</button>
+  </a>
+</div>
+
 <h1>Cadastro de Usuário</h1>
-<p>Cadastre-se!</p>
+<hr class="divisor">
+
+<p style="text-align:center;">Cadastre-se!</p>
+
 <form th:action="@{/cadastro}" method="post" th:object="${usuario}">
   <label>Usuário</label><br>
   <input type="text" th:field="*{username}" required><br>
@@ -15,5 +25,6 @@
   <input type="password" th:field="*{password}" required><br><br>
   <button type="submit">Cadastrar</button>
 </form>
+
 </body>
 </html>

@@ -37,17 +37,12 @@ public class MercadoWebController {
         return "redirect:/produtos";
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        if (authentication == null) return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")); //autenticacao para adms
-    }
-
     @GetMapping("/produtos/{id}/comprar")
     public String formComprar(@PathVariable Long id, Model model) {
         model.addAttribute("mercado", mercadoService.buscarPorId(id));
         return "produto-comprar";
     }
+
     @PostMapping("/produtos/{id}/comprar")
     public String comprar(@PathVariable Long id, @RequestParam Integer quantidade, Model model) {
         Mercado mercado = mercadoService.buscarPorId(id);
@@ -60,7 +55,10 @@ public class MercadoWebController {
 
         int novaQuantidade = mercado.getEstoque() - quantidade;
         mercadoService.atualizarEstoque(id, novaQuantidade);
-        return "redirect:/produtos";
+
+        model.addAttribute("mercado", mercado);
+        model.addAttribute("quantidade", quantidade);
+        return "compra-confirmada";
     }
 
     @GetMapping("/produtos/editar")
@@ -81,4 +79,9 @@ public class MercadoWebController {
         return "redirect:/produtos";
     }
 
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
 }

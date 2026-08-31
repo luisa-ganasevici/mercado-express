@@ -2,15 +2,19 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
   <title>Usuários - Mercado Express</title>
 </head>
 <body>
 
+<div class="voltar-topo">
+  <a th:href="@{/produtos}"><button type="button">Voltar</button></a>
+</div>
+
 <h1>Usuários</h1>
+<hr class="divisor">
 
-<a th:href="@{/produtos}"><button type="button">Voltar</button></a>
-
-<p th:if="${param.erro != null}" style="color:red;">
+<p th:if="${param.erro != null}" style="color:red; text-align:center;">
   Não é possível remover a permissão de admin da sua própria conta.
 </p>
 

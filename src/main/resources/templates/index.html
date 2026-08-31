@@ -2,21 +2,34 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <title>Mercado Express</title>
 </head>
 <body>
-<h1>Bem-vindo ao Mercado Express</h1>
 
-<a th:href="@{/produtos}">
-    <button type="button">Ver produtos</button>
-</a>
+<div class="auth-topo">
+    <a th:href="@{/login}"><button type="button">Entrar</button></a>
+    <a th:href="@{/cadastro}"><button type="button">Cadastre-se</button></a>
+</div>
 
-<a th:href="@{/login}">
-    <button type="button">Entrar</button>
-</a>
+<div class="hero">
+    <h1>Bem-vindo ao Mercado Express</h1>
+    <hr class="divisor">
 
-<a th:href="@{/cadastro}">
-    <button type="button">Cadastrar</button>
-</a>
+    <p>
+        O Mercado Express é a forma mais simples de encontrar o que você precisa,
+        na hora que você precisa. Produtos variados, preços justos e um estoque
+        sempre atualizado, tudo em um só lugar.
+    </p>
+    <p>
+        Navegue pelos nossos produtos sem precisar de cadastro. Quando quiser
+        comprar, é só criar sua conta e finalizar em poucos cliques.
+    </p>
+
+    <a th:href="@{/produtos}">
+        <button type="button" class="btn-destaque">Ver produtos</button>
+    </a>
+</div>
+
 </body>
 </html>

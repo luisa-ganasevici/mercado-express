@@ -2,26 +2,32 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <title>Produtos - Mercado Express</title>
 </head>
 <body>
 
+<div class="voltar-topo">
+    <a th:if="${logado}" th:href="@{/home/privado}">
+        <button type="button">Voltar</button>
+    </a>
+    <a th:unless="${logado}" th:href="@{/home}">
+        <button type="button">Voltar</button>
+    </a>
+</div>
+
 <h1>Produtos</h1>
+<hr class="divisor">
 
-<a th:if="${logado}" th:href="@{/home/privado}">
-    <button type="button">Voltar</button>
-</a>
-<a th:unless="${logado}" th:href="@{/home}">
-    <button type="button">Voltar</button>
-</a>
+<div class="botoes">
+    <a th:if="${isAdmin}" th:href="@{/produtos/novo}">
+        <button type="button">Novo produto</button>
+    </a>
 
-<a th:if="${isAdmin}" th:href="@{/produtos/novo}">
-    <button type="button">Novo produto</button>
-</a>
-
-<a th:if="${isAdmin}" th:href="@{/usuarios}">
-    <button type="button">Gerenciar usuários</button>
-</a>
+    <a th:if="${isAdmin}" th:href="@{/usuarios}">
+        <button type="button">Gerenciar usuários</button>
+    </a>
+</div>
 
 <form th:action="@{/produtos}" method="get">
     <input type="text" name="nome" placeholder="Buscar produto..." />
