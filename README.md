@@ -1,10 +1,9 @@
-# Mercado Express API
+# Mercado Express — Web (Thymeleaf + Spring Security)
 
-Checkpoint 4 — Parte 1 (API e Deploy)
+Checkpoint 4 — Parte 2 (Spring Web, Spring MVC, Security e Deploy)
 FIAP — Curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TDS)
-Professor: Dr. Marcel Stefan Wagner
 
-API REST para gerenciamento de produtos de um "mercado express", desenvolvida em **Spring Boot**, com persistência em **Oracle Database**, utilizando **Lombok** e seguindo o **Richardson Maturity Model nível 3 (HATEOAS)**.
+Aplicação web para gerenciamento de produtos de um "mercado express", desenvolvida em **Spring Boot** com **Spring MVC**, **Thymeleaf** como motor de templates e **Spring Security** para autenticação e autorização de rotas. Persistência no mesmo banco **Oracle** utilizado na Parte 1.
 
 ## Integrantes
 
@@ -22,10 +21,10 @@ API REST para gerenciamento de produtos de um "mercado express", desenvolvida em
 2. [Arquitetura do projeto](#arquitetura-do-projeto)
 3. [Modelagem da entidade `Mercado`](#modelagem-da-entidade-mercado)
 4. [Configuração do banco de dados](#configuração-do-banco-de-dados)
-5. [O que é HATEOAS e por que foi usado](#o-que-é-hateoas-e-por-que-foi-usado)
-6. [Tratamento de erros](#tratamento-de-erros)
+5. [Spring Security — rotas públicas e privadas](#spring-security--rotas-públicas-e-privadas)
+6. [Telas e funcionalidades (CRUD via interface Web)](#telas-e-funcionalidades-crud-via-interface-web)
 7. [Endpoints](#endpoints)
-8. [Testes realizados (Postman)](#testes-realizados-postman--porta-8082)
+8. [Tratamento de erros](#tratamento-de-erros)
 9. [Pré-requisitos e como executar localmente](#pré-requisitos-e-como-executar-localmente)
 10. [Segurança e boas práticas](#segurança-e-boas-práticas)
 11. [Deploy](#deploy)
@@ -34,245 +33,136 @@ API REST para gerenciamento de produtos de um "mercado express", desenvolvida em
 
 ## Tecnologias utilizadas
 
-| Tecnologia | Versão | Finalidade |
-|---|---|---|
-| Java | 21 (LTS) | Linguagem |
-| Spring Boot | 4.1.0 | Framework principal |
-| Maven | — | Gerenciador de dependências e build |
-| Spring Web | — | Criação dos endpoints REST |
-| Spring Data JPA | — | Persistência de dados via Hibernate |
-| Spring HATEOAS | — | Implementação do nível 3 de maturidade REST |
-| Lombok | — | Redução de código boilerplate (getters, setters, construtores) |
-| Oracle Driver (JDBC) | — | Conexão com o banco de dados Oracle (ORACLE_FIAP) |
-| springdoc-openapi | 3.1.0 | Documentação automática via Swagger UI |
+| Tecnologia | Finalidade |
+|---|---|
+| Java 21 (LTS) | Linguagem |
+| Spring Boot | Framework principal |
+| Maven | Gerenciador de dependências e build |
+| Spring MVC | Controllers Web, roteamento de páginas |
+| Thymeleaf | Motor de templates HTML |
+| Spring Security | Autenticação, autorização e controle de rotas públicas/privadas |
+| Spring Data JPA | Persistência de dados via Hibernate |
+| Lombok | Redução de código boilerplate (getters, setters, construtores) |
+| Oracle Driver (JDBC) | Conexão com o banco de dados Oracle (ORACLE_FIAP) |
+| Docker | Empacotamento da aplicação para o deploy |
 
 ---
 
 ## Arquitetura do projeto
 
-O projeto segue a arquitetura em três camadas, com uma camada adicional de tratamento de exceções:
-
 ```
 br.com.fiap.mercadoexpress
-├── controller     -> Recebe requisições HTTP, monta as respostas com HATEOAS
+├── controller     -> Recebe requisições HTTP, monta o Model e retorna o nome da página Thymeleaf
 ├── service        -> Regras de negócio, orquestra o fluxo entre Controller e Repository
 ├── repository     -> Acesso a dados via Spring Data JPA
-├── entity         -> Representação da tabela do banco de dados
+├── entity         -> Representação das tabelas do banco de dados (Mercado, Usuario)
+├── config         -> Configuração do Spring Security
 └── exception      -> Tratamento centralizado de erros (ex: recurso não encontrado)
 ```
 
-**Por que essa separação?** Cada camada tem uma única responsabilidade: o `Controller` não sabe nada sobre banco de dados, o `Service` não sabe nada sobre HTTP, e o `Repository` não sabe nada sobre regras de negócio. Isso reduz o acoplamento entre as partes do sistema — trocar o banco de dados, por exemplo, afetaria apenas a camada `Repository`.
-
-O HATEOAS foi implementado especificamente na camada `Controller`, pois é ali que a API decide **como o recurso é exposto via HTTP** (rotas, links de navegação) — uma responsabilidade de comunicação/apresentação, não de regra de negócio.
+Diferente da Parte 1 (API REST pura, retornando JSON), aqui os `Controllers` retornam o **nome de um template Thymeleaf**, que é renderizado no servidor e devolvido como HTML pronto para o navegador — por isso a anotação usada é `@Controller` (não `@RestController`).
 
 ---
 
 ## Modelagem da entidade `Mercado`
 
+Mesma tabela utilizada na Parte 1 (`TDS_TB_mercado`), no banco Oracle da FIAP, reaproveitada nesta Parte 2:
+
 | Campo | Tipo Java | Coluna no Oracle | Observação |
 |---|---|---|---|
-| id | `Long` | Id | Gerado automaticamente via `SEQUENCE` do Oracle (`MERCADO_SEQ`), `allocationSize = 1` |
+| id | `Long` | Id | Gerado via `SEQUENCE` do Oracle (`MERCADO_SEQ`) |
 | nome | `String` | Nome | — |
 | tipo | `String` | Tipo | — |
 | setor | `String` | Setor | — |
 | tamanho | `String` | Tamanho | — |
-| preco | `BigDecimal` | Preco | `BigDecimal` em vez de `float`/`double`, para evitar erros de arredondamento em valores monetários |
+| cor | `String` | Cor | — |
+| preco | `BigDecimal` | Preco | `BigDecimal` para evitar erros de arredondamento em valores monetários |
+| estoque | `Integer` | Estoque | Controlado também pela tela de compra (baixa automática do estoque) |
+| disponivel | `Boolean` | Disponivel | Usado para "exclusão lógica" (ver seção de CRUD abaixo) |
 
-**Estratégia de geração de ID:** optamos por `SEQUENCE` (em vez de `IDENTITY` ou `AUTO`) por ser a abordagem clássica do Oracle, com controle explícito via `@SequenceGenerator`. O `allocationSize = 1` garante que o Hibernate sempre consulte o valor real da sequence no banco antes de cada inserção — evitando conflitos de chave duplicada quando registros também são inseridos manualmente via SQL Developer.
-
----
-
-## Configuração do banco de dados
-
-A conexão com o Oracle (`ORACLE_FIAP`) é feita via `application.properties`, utilizando **variáveis de ambiente** para usuário e senha — nenhuma credencial fica exposta no repositório:
-
-```properties
-server.port=8082
-
-spring.datasource.url=jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.OracleDialect
-```
-
-Para rodar localmente, configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do SQL Developer (via Run Configuration da IDE ou variáveis de sistema).
+Também existe a entidade `Usuario`, usada pelo Spring Security para autenticação (login, cadastro, papéis `ADMIN`/`CLIENTE`).
 
 ---
 
-## O que é HATEOAS e por que foi usado
+## Spring Security — rotas públicas e privadas
 
-**HATEOAS** (Hypertext As The Engine Of Application State) é o princípio REST que define o **nível 3** do Modelo de Maturidade de Richardson — o nível mais alto da escala:
+A aplicação define três níveis de acesso, configurados em `SecurityConfig`:
 
-| Nível | Característica |
-|---|---|
-| 0 | Um único endpoint, tudo via POST |
-| 1 | Múltiplos recursos com URIs próprias |
-| 2 | Verbos HTTP corretos + status codes corretos |
-| 3 | Nível 2 + **HATEOAS**: respostas incluem links de navegação |
+| Nível | Rotas | Quem acessa |
+|---|---|---|
+| **Público** | `/`, `/home`, `/home/publico`, `/cadastro`, `/login`, `/logout`, `/css/**`| Qualquer visitante, sem login |
+| **Público (leitura)** | `GET /produtos`, `GET /produtos/{id}` | Qualquer visitante pode navegar e ver os produtos, sem precisar de conta |
+| **Autenticado** | `/produtos/{id}/comprar` | Qualquer usuário logado (`CLIENTE` ou `ADMIN`) |
+| **Somente ADMIN** | `/produtos/**` (criar, editar, excluir), `/usuarios/**` | Apenas usuários com papel `ADMIN` |
 
-Em vez de retornar apenas os dados do recurso, a API retorna também um campo `_links`, informando ao cliente quais ações/rotas estão disponíveis a partir daquele recurso — sem que o cliente precise conhecer essas URLs de antemão:
+**Login:** implementado via `formLogin` do Spring Security, com uma página de login customizada em Thymeleaf (`login.html`). Em caso de usuário/senha inválidos, o usuário é redirecionado de volta para `/login?error=true`, exibindo uma mensagem de erro na própria tela — sem precisar de uma página separada.
 
-```json
-{
-  "id": 1,
-  "nome": "Sabonete",
-  "preco": 5.90,
-  "_links": {
-    "self": { "href": "http://localhost:8082/mercado/1" },
-    "all-mercados": { "href": "http://localhost:8082/mercado" }
-  }
-}
-```
+**Senhas:** armazenadas com hash `BCrypt` (`BCryptPasswordEncoder`), nunca em texto puro no banco.
 
-Essa resposta é gerada com um `EntityModel<Mercado>`, que "embrulha" a entidade original com os links, sem alterar a classe `Mercado`. Os links são construídos de forma dinâmica com `linkTo(methodOn(...))`, apontando para os métodos reais do Controller — se uma rota mudar no futuro, o link se ajusta automaticamente.
+**Papéis (roles):** todo novo cadastro nasce com o papel `CLIENTE`. Um usuário `ADMIN` pode promover ou rebaixar outros usuários pela tela `/usuarios`, com uma trava que impede o próprio admin de se rebaixar por engano.
 
 ---
 
-## Tratamento de erros
+## Telas e funcionalidades (CRUD via interface Web)
 
-Erros de recurso não encontrado são tratados de forma centralizada, evitando que qualquer requisição malformada gere um `500 Internal Server Error` genérico. A exceção customizada `MercadoNotFoundException` é interceptada globalmente por um `@RestControllerAdvice`:
+Todas as operações abaixo são acionadas por **botões/links na interface**, sem necessidade de ferramentas externas (Postman, etc.):
 
-```java
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+### Create
+Botão **"Novo produto"** (visível apenas para `ADMIN`, na tela `/produtos`) → abre o formulário `produto-form.html` → salva via `POST /produtos`.
 
-    @ExceptionHandler(MercadoNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleMercadoNotFound(MercadoNotFoundException ex) {
-        Map<String, Object> corpo = new LinkedHashMap<>();
-        corpo.put("timestamp", LocalDateTime.now());
-        corpo.put("status", HttpStatus.NOT_FOUND.value());
-        corpo.put("erro", "Mercado não encontrado");
-        corpo.put("mensagem", ex.getMessage());
+### Read
+- Tela `/produtos`: lista todos os produtos cadastrados, com busca por nome (`?nome=...`), que filtra a lista dinamicamente e exibe uma mensagem de "produto não encontrado" quando a busca não retorna resultados.
+- Botão **"Comprar"**: abre a tela de compra de um produto específico (`GET /produtos/{id}/comprar`).
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(corpo);
-    }
-}
-```
+### Update
+- Botão **"Editar"** (ADMIN): abre `produto-editar.html`, pré-preenchido com os dados atuais, salvando via `POST /produtos/{id}/editar`.
+- Atualização rápida de estoque via `POST /produtos/{id}/estoque`, também usada automaticamente quando um cliente finaliza uma compra (baixa do estoque comprado).
 
-Essa classe intercepta a exceção lançada por **qualquer** método do `MercadoController` (GET, PUT, PATCH, DELETE) que dependa de `buscarPorId`, centralizando o tratamento de erro num único lugar em vez de repetir `try/catch` em cada endpoint.
+### Delete
+Botão **"Excluir"** (ADMIN) → `POST /produtos/{id}/excluir`.
+
+> **Sobre a estratégia de exclusão:** optamos por uma soft delete em vez de remover fisicamente o registro do banco — o produto é marcado com `disponivel = false` e deixa de aparecer disponível para compra, mas o registro é preservado. Essa decisão evita a perda de histórico de vendas/estoque associado ao produto e reflete uma prática comum em sistemas de e-commerce reais.
+
+### Cadastro e Login de usuários
+- `/cadastro`: formulário de criação de conta (papel inicial `CLIENTE`).
+- `/login`: autenticação via Spring Security, com tela de erro amigável em caso de credenciais inválidas.
+- `/usuarios` (ADMIN): lista usuários e permite promover/rebaixar entre `CLIENTE` e `ADMIN`.
 
 ---
 
 ## Endpoints
 
-| Verbo | Rota | Descrição | Status de sucesso |
+| Método | Rota | Acesso | Descrição |
 |---|---|---|---|
-| GET | `/mercado` | Lista todos os produtos | 200 OK |
-| GET | `/mercado/{id}` | Busca um produto por ID | 200 OK |
-| POST | `/mercado` | Cria um novo produto | 201 Created |
-| PUT | `/mercado/{id}` | Atualiza todos os campos de um produto | 200 OK |
-| PATCH | `/mercado/{id}` | Atualiza parcialmente um produto (apenas os campos enviados) | 200 OK |
-| DELETE | `/mercado/{id}` | Remove um produto pelo ID | 204 No Content |
-
-### PUT vs PATCH
-
-- **PUT**: substitui o recurso inteiro — o cliente deve enviar todos os campos.
-- **PATCH**: atualiza apenas os campos enviados no corpo da requisição — os demais campos permanecem inalterados.
+| GET | `/` | Público | Redireciona para `/home` |
+| GET | `/home` | Público | Página inicial |
+| GET | `/home/publico` | Público | Rota pública de teste |
+| GET | `/home/privado` | Autenticado | Página inicial de usuário logado |
+| GET | `/login` | Público | Formulário de login |
+| POST | `/login` | Público | Processa login (gerenciado pelo Spring Security) |
+| GET | `/cadastro` | Público | Formulário de cadastro de usuário |
+| POST | `/cadastro` | Público | Cria novo usuário (papel `CLIENTE`) |
+| GET | `/produtos` | Público | Lista/busca produtos |
+| GET | `/produtos/novo` | ADMIN | Formulário de novo produto |
+| POST | `/produtos` | ADMIN | Cria produto |
+| GET | `/produtos/editar` | ADMIN | Formulário de edição |
+| POST | `/produtos/{id}/editar` | ADMIN | Salva edição |
+| POST | `/produtos/{id}/excluir` | ADMIN | Exclusão lógica do produto |
+| POST | `/produtos/{id}/estoque` | ADMIN | Atualização rápida de estoque |
+| GET | `/produtos/{id}/comprar` | Autenticado | Formulário de compra |
+| POST | `/produtos/{id}/comprar` | Autenticado | Processa a compra, baixa estoque |
+| GET | `/usuarios` | ADMIN | Lista usuários |
+| POST | `/usuarios/{id}/promover` | ADMIN | Promove usuário a `ADMIN` |
+| POST | `/usuarios/{id}/rebaixar` | ADMIN | Rebaixa usuário a `CLIENTE` |
 
 ---
 
-## Testes realizados (Postman) — porta `8082`
+## Tratamento de erros
 
-### 1. Configuração final do Spring Initializr
-
-![Spring Initializr](docs/prints/spring-initializr.png)
-
-Configuração: Maven, Java 21, Spring Boot 4.1.0, com as dependências Spring Web, Spring Data JPA, Spring HATEOAS, Lombok e Oracle Driver.
-
-### 2. GET /mercado — lista vazia
-
-![GET lista vazia](docs/prints/get-lista-vazia.png)
-
-Sem registros na tabela, a API retorna apenas o link `self` da coleção, sem o campo `_embedded`.
-
-### 3. POST /mercado — criação de produtos (Create)
-
-Estrutura do JSON enviado:
-```json
-{
-    "nome": "Sabonete",
-    "tipo": "Limpeza",
-    "setor": "A1",
-    "tamanho": "P",
-    "preco": 5.90
-}
-```
-
-![POST id 1](docs/prints/post-id-1.png)
-![POST id 2](docs/prints/post-id-2.png)
-![POST id 3](docs/prints/post-id-3.png)
-
-Cada criação retorna `201 Created`, com o header `Location` apontando para a URL do novo recurso e o corpo já contendo os `_links` do HATEOAS.
-
-### 4. GET /mercado e GET /mercado/{id} — leitura (Read)
-
-![GET todos](docs/prints/get-todos.png)
-![GET id 1](docs/prints/get-id-1.png)
-
-Com registros na tabela, a listagem geral passa a incluir `_embedded.mercadoList`, com cada item trazendo seus próprios `_links`.
-
-### 5. GET /mercado/{id} inexistente — tratamento de erro
-
-![GET id inexistente](docs/prints/get-id-inexistente.png)
-
-Ao buscar um ID que não existe, a API retorna `404 Not Found` com um corpo de erro estruturado, tratado pela classe `GlobalExceptionHandler`:
-```json
-{
-    "timestamp": "...",
-    "status": 404,
-    "erro": "Mercado não encontrado",
-    "mensagem": "Mercado não encontrado com id: 999"
-}
-```
-
-### 6. PUT /mercado/{id} — atualização completa (Update)
-
-Estrutura do JSON enviado (todos os campos):
-```json
-{
-    "nome": "Sabonete Premium",
-    "tipo": "Limpeza",
-    "setor": "B2",
-    "tamanho": "M",
-    "preco": 8.50
-}
-```
-
-![PUT id 1](docs/prints/put-id-1.png)
-![Banco atualizado](docs/prints/db-atualizado.png)
-
-Todos os campos do registro foram substituídos, confirmado tanto na resposta da API quanto diretamente no SQL Developer.
-
-### 7. PATCH /mercado/{id} — atualização parcial (Update)
-
-Estrutura do JSON enviado (apenas o campo alterado):
-```json
-{
-    "preco": 9.99
-}
-```
-
-![PATCH id 1](docs/prints/patch-id-1.png)
-
-Apenas o campo `preco` foi alterado — `nome`, `tipo`, `setor` e `tamanho` permaneceram exatamente como estavam após o PUT, demonstrando a diferença de comportamento entre os dois verbos.
-
-### 8. DELETE /mercado/{id} — exclusão (Delete)
-
-![DELETE id 2](docs/prints/delete-id-2.png)
-![DELETE inexistente](docs/prints/delete-inexistente.png)
-![GET após delete](docs/prints/get-atualizado.png)
-
-A exclusão de um ID existente retorna `204 No Content`, sem corpo de resposta. A exclusão de um ID inexistente é tratada pelo mesmo mecanismo de erro do GET, retornando `404 Not Found`. O GET final confirma que o registro excluído não aparece mais na listagem.
-
-### 9. Swagger UI
-
-![Swagger](docs/prints/swagger-ui.png)
-
-Documentação automática dos endpoints, gerada via `springdoc-openapi`, disponível em `/swagger-ui/index.html`.
+- **Login inválido:** redireciona para `/login?error=true`, exibindo mensagem de erro na própria tela (sem expor detalhes técnicos ao usuário).
+- **Acesso negado:** usuários sem permissão para uma rota são redirecionados para `/acesso-negado`.
+- **Produto/usuário não encontrado:** tratado de forma centralizada, evitando erros genéricos (`500`) na tela.
+- **Busca sem resultado:** exibe mensagem amigável ("Nenhum produto encontrado para '...'") no lugar da tabela, em vez de deixar a tela em branco.
 
 ---
 
@@ -280,42 +170,33 @@ Documentação automática dos endpoints, gerada via `springdoc-openapi`, dispon
 
 **Pré-requisitos:**
 - Java 21 (JDK)
-- Maven (ou usar o `./mvnw` incluso no projeto, que não exige instalação separada)
+- Maven (ou usar o `./mvnw` incluso no projeto)
 - Acesso ao banco Oracle FIAP (`ORACLE_FIAP`), com usuário e senha válidos
-- Postman ou Insomnia, para testar os endpoints
 
 **Passos:**
-1. Clone o repositório
-2. Configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do Oracle FIAP (via Run Configuration da IDE ou variáveis de sistema)
-3. Execute a classe `MercadoExpressApplication`
-4. A aplicação sobe em `http://localhost:8082`
-5. Importe os endpoints no Postman/Insomnia usando a base `http://localhost:8082/mercado`
+1. Clone o repositório.
+2. Configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do Oracle FIAP.
+3. Execute a classe `MercadoExpressApplication`.
+4. A aplicação sobe em `http://localhost:8082`.
+5. Acesse pelo navegador — não é necessário Postman/Insomnia, toda a navegação é feita pela interface Web.
 
 ---
 
 ## Segurança e boas práticas
 
-- **Nenhuma credencial é versionada no código.** Usuário e senha do Oracle são lidos via variáveis de ambiente (`${DB_USERNAME}`, `${DB_PASSWORD}`), tanto localmente (Run Configuration da IDE) quanto em produção (painel de variáveis do Render).
-- **O `.gitignore` cobre a pasta `.idea/`**, evitando que arquivos de configuração local da IDE (que podem conter credenciais em texto puro, como Run Configurations) sejam versionados.
-- **Pool de conexões limitado explicitamente** (`spring.datasource.hikari.maximum-pool-size`), respeitando o limite de sessões simultâneas de contas acadêmicas no Oracle da FIAP.
+- **Nenhuma credencial é versionada no código.** Usuário e senha do Oracle são lidos via variáveis de ambiente (`${DB_USERNAME}`, `${DB_PASSWORD}`), tanto localmente quanto em produção (painel de variáveis do Render).
+- **Senhas de usuários** armazenadas com hash `BCrypt`, nunca em texto puro.
+- **Controle de acesso por papel (role-based)** via Spring Security, com rotas administrativas protegidas por `hasRole("ADMIN")`.
+- **CSRF habilitado** (padrão do Spring Security) — todos os formulários de POST incluem o token CSRF.
 
 ---
 
 ## Deploy
 
-🔗 Link da aplicação em produção (Render): https://cp4-java-mercado-express.onrender.com
+🔗 Link da aplicação em produção (Render): https://mercado-express-957x.onrender.com
 
-Deploy realizado via **Docker** (Render não possui runtime nativo para Java), com um `Dockerfile` multi-stage: a primeira etapa compila o projeto com Maven, a segunda roda apenas o `.jar` final sobre uma imagem JRE enxuta.
+Deploy realizado via **Docker** no [Render](https://render.com/), com um `Dockerfile` multi-stage: a primeira etapa compila o projeto com Maven, a segunda roda apenas o `.jar` final sobre uma imagem JRE enxuta.
 
 **Observações sobre o ambiente de produção:**
 - O plano utilizado é o **Free Tier** do Render, que hiberna a aplicação após períodos de inatividade — a primeira requisição após esse período pode demorar cerca de 1 minuto para responder, enquanto a instância "acorda".
-- O tamanho do pool de conexões do Hikari (`spring.datasource.hikari.maximum-pool-size`) foi reduzido explicitamente para respeitar o limite de sessões simultâneas (`SESSIONS_PER_USER`) da conta acadêmica no Oracle da FIAP.
-- Um endpoint `GET /` foi criado para servir como página inicial da API, retornando informações do projeto e um link HATEOAS para o recurso principal (`/mercado`) — reforçando o próprio princípio de navegabilidade da API já na porta de entrada.
-
-![Home](docs/prints/home.png)
-
----
-
-## Estrutura de commits
-
-O projeto seguiu a convenção de **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`), documentando de forma clara a evolução do desenvolvimento — desde a configuração inicial até a implementação completa do CRUD com HATEOAS.
+- A porta é configurada dinamicamente via variável de ambiente `PORT`, injetada automaticamente pelo Render (`server.port=${PORT:8082}`).

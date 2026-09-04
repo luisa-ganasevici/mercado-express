@@ -18,7 +18,7 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(authorizeConfig -> {
                     authorizeConfig.requestMatchers("/", "/api", "/home", "/home/publico",
                             "/cadastro", "/login", "/logout",
-                            "/css/**", "/images/**").permitAll();
+                            "/css/**").permitAll();
 
                     authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
                             "/mercado", "/mercado/{id}").permitAll();
