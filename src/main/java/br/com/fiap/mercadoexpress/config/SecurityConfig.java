@@ -18,10 +18,11 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(authorizeConfig -> {
                     authorizeConfig.requestMatchers("/", "/api", "/home", "/home/publico",
                             "/cadastro", "/login", "/logout",
-                            "/css/**").permitAll();
+                            "/css/**", "/acesso-negado").permitAll();
 
-                    authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
-                            "/mercado", "/mercado/{id}").permitAll();
+                    authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id:[0-9]+}",
+                            "/mercado", "/mercado/{id:[0-9]+}").permitAll();
+
 
                     authorizeConfig.requestMatchers("/produtos/{id}/comprar").authenticated();
 

@@ -20,4 +20,9 @@ public class SecurityController {
 
     @GetMapping("/home")
     public String retornohtml() { return "index"; }
+
+    @GetMapping("/acesso-negado")
+    public String acessoNegado(){
+        return "acesso-negado";
+    }
 }
