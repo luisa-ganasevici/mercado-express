@@ -16,12 +16,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain publico(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authorizeConfig -> {
-                    authorizeConfig.requestMatchers("/", "/api", "/home", "/home/publico",
+                    authorizeConfig.requestMatchers("/", "/api", "/home",
                             "/cadastro", "/login", "/logout",
-                            "/css/**").permitAll();
+                            "/css/**", "/acesso-negado").permitAll();
 
-                    authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
-                            "/mercado", "/mercado/{id}").permitAll();
+                    authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id:[0-9]+}",
+                            "/mercado", "/mercado/{id:[0-9]+}").permitAll();
+
 
                     authorizeConfig.requestMatchers("/produtos/{id}/comprar").authenticated();
 

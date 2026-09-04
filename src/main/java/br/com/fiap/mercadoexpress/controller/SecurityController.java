@@ -12,12 +12,11 @@ public class SecurityController {
         return "logado";
     }
 
-    @GetMapping("/home/publico")
-    @ResponseBody
-    public String rotaPublica(){
-        return "<h1>Rota publica</h1>";
-    }
-
     @GetMapping("/home")
     public String retornohtml() { return "index"; }
+
+    @GetMapping("/acesso-negado")
+    public String acessoNegado(){
+        return "acesso-negado";
+    }
 }
