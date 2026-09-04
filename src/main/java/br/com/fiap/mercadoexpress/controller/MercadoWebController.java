@@ -17,11 +17,20 @@ public class MercadoWebController {
     private final MercadoService mercadoService;
 
     @GetMapping("/produtos")
-    public String getProdutos(Model model, Authentication authentication) {
+    public String getProdutos(@RequestParam(required = false) String nome,
+                              Model model, Authentication authentication) {
         List<Mercado> listaProdutos = mercadoService.listarTodos();
+
+        if (nome != null && !nome.isBlank()) {
+            listaProdutos = listaProdutos.stream()
+                    .filter(p -> p.getNome().toLowerCase().contains(nome.toLowerCase()))
+                    .toList();
+        }
+
         model.addAttribute("produtos", listaProdutos);
         model.addAttribute("isAdmin", isAdmin(authentication));
         model.addAttribute("logado", authentication != null && authentication.isAuthenticated());
+        model.addAttribute("termoBusca", nome);
         return "produtos";
     }
 

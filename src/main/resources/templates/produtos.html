@@ -30,11 +30,20 @@
 </div>
 
 <form th:action="@{/produtos}" method="get">
-    <input type="text" name="nome" placeholder="Buscar produto..." />
+    <input type="text" name="nome" placeholder="Buscar produto..." th:value="${termoBusca}" />
     <button type="submit">Buscar</button>
 </form>
 
-<table border="1" cellpadding="8">
+<div th:if="${#lists.isEmpty(produtos)}" class="alerta-erro">
+    <span th:if="${termoBusca != null and !#strings.isEmpty(termoBusca)}">
+        Nenhum produto encontrado para "<span th:text="${termoBusca}"></span>".
+    </span>
+    <span th:unless="${termoBusca != null and !#strings.isEmpty(termoBusca)}">
+        Nenhum produto encontrado.
+    </span>
+</div>
+
+<table border="1" cellpadding="8" th:unless="${#lists.isEmpty(produtos)}">
     <thead>
     <tr>
         <th>Nome</th>
@@ -72,8 +81,6 @@
     </tr>
     </tbody>
 </table>
-
-<p th:if="${produtos == null or #lists.isEmpty(produtos)}">Nenhum produto encontrado.</p>
 
 <div th:if="${isAdmin}">
     <h3>Editar produto</h3>
