@@ -18,7 +18,7 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(authorizeConfig -> {
                     authorizeConfig.requestMatchers("/", "/api", "/home", "/home/publico",
                             "/cadastro", "/login", "/logout",
-                            "/css/**", "/js/**", "/images/**").permitAll();
+                            "/css/**").permitAll();
 
                     authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id}",
                             "/mercado", "/mercado/{id}").permitAll();
@@ -32,6 +32,7 @@ public class SecurityConfig {
                     authorizeConfig.anyRequest().authenticated();
                 }).formLogin(form -> form.loginPage("/login")
                         .loginProcessingUrl("/login")
+                        .failureUrl("/login?error=true")
                         .defaultSuccessUrl("/home/privado", false))
                 .exceptionHandling(ex -> ex.accessDeniedPage("/acesso-negado"))
                 .build();
