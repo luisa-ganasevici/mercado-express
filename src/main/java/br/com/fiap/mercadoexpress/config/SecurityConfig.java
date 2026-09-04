@@ -16,7 +16,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain publico(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authorizeConfig -> {
-                    authorizeConfig.requestMatchers("/", "/api", "/home", "/home/publico",
+                    authorizeConfig.requestMatchers("/", "/api", "/home",
                             "/cadastro", "/login", "/logout",
                             "/css/**", "/acesso-negado").permitAll();
 

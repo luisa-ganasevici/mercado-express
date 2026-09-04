@@ -90,12 +90,14 @@ A aplicação define três níveis de acesso, configurados em `SecurityConfig`:
 
 | Nível | Rotas | Quem acessa |
 |---|---|---|
-| **Público** | `/`, `/home`, `/home/publico`, `/cadastro`, `/login`, `/logout`, `/css/**`| Qualquer visitante, sem login |
-| **Público (leitura)** | `GET /produtos`, `GET /produtos/{id}` | Qualquer visitante pode navegar e ver os produtos, sem precisar de conta |
+| **Público** | `/`, `/home`, `/cadastro`, `/login`, `/logout`, `/acesso-negado`, `/css/**`| Qualquer visitante, sem login |
+| **Público (leitura)** | `GET /produtos`, `GET /produtos/{id}` (somente ID numérico) | Qualquer visitante pode navegar e ver os produtos, sem precisar de conta |
 | **Autenticado** | `/produtos/{id}/comprar` | Qualquer usuário logado (`CLIENTE` ou `ADMIN`) |
 | **Somente ADMIN** | `/produtos/**` (criar, editar, excluir), `/usuarios/**` | Apenas usuários com papel `ADMIN` |
 
 **Login:** implementado via `formLogin` do Spring Security, com uma página de login customizada em Thymeleaf (`login.html`). Em caso de usuário/senha inválidos, o usuário é redirecionado de volta para `/login?error=true`, exibindo uma mensagem de erro na própria tela — sem precisar de uma página separada.
+
+**Acesso negado:** usuários autenticados sem permissão suficiente para acessar uma rota (ex: `CLIENTE` tentando acessar rota de `ADMIN`) são direcionados para a página `/acesso-negado`, estilizada com o mesmo padrão visual da aplicação.
 
 **Senhas:** armazenadas com hash `BCrypt` (`BCryptPasswordEncoder`), nunca em texto puro no banco.
 
@@ -136,13 +138,14 @@ Botão **"Excluir"** (ADMIN) → `POST /produtos/{id}/excluir`.
 |---|---|---|---|
 | GET | `/` | Público | Redireciona para `/home` |
 | GET | `/home` | Público | Página inicial |
-| GET | `/home/publico` | Público | Rota pública de teste |
 | GET | `/home/privado` | Autenticado | Página inicial de usuário logado |
+| GET | `/acesso-negado` | Público | Página exibida quando um usuário autenticado tenta acessar uma rota sem permissão |
 | GET | `/login` | Público | Formulário de login |
 | POST | `/login` | Público | Processa login (gerenciado pelo Spring Security) |
 | GET | `/cadastro` | Público | Formulário de cadastro de usuário |
 | POST | `/cadastro` | Público | Cria novo usuário (papel `CLIENTE`) |
 | GET | `/produtos` | Público | Lista/busca produtos |
+| GET | `/produtos/{id}` | Público | Detalhe de um produto (somente ID numérico) |
 | GET | `/produtos/novo` | ADMIN | Formulário de novo produto |
 | POST | `/produtos` | ADMIN | Cria produto |
 | GET | `/produtos/editar` | ADMIN | Formulário de edição |
@@ -160,7 +163,7 @@ Botão **"Excluir"** (ADMIN) → `POST /produtos/{id}/excluir`.
 ## Tratamento de erros
 
 - **Login inválido:** redireciona para `/login?error=true`, exibindo mensagem de erro na própria tela (sem expor detalhes técnicos ao usuário).
-- **Acesso negado:** usuários sem permissão para uma rota são redirecionados para `/acesso-negado`.
+- **Acesso negado:** usuários sem permissão para uma rota são redirecionados para `/acesso-negado`, uma página dedicada e estilizada (não a página padrão de erro do Spring).
 - **Produto/usuário não encontrado:** tratado de forma centralizada, evitando erros genéricos (`500`) na tela.
 - **Busca sem resultado:** exibe mensagem amigável ("Nenhum produto encontrado para '...'") no lugar da tabela, em vez de deixar a tela em branco.
 
@@ -187,6 +190,7 @@ Botão **"Excluir"** (ADMIN) → `POST /produtos/{id}/excluir`.
 - **Nenhuma credencial é versionada no código.** Usuário e senha do Oracle são lidos via variáveis de ambiente (`${DB_USERNAME}`, `${DB_PASSWORD}`), tanto localmente quanto em produção (painel de variáveis do Render).
 - **Senhas de usuários** armazenadas com hash `BCrypt`, nunca em texto puro.
 - **Controle de acesso por papel (role-based)** via Spring Security, com rotas administrativas protegidas por `hasRole("ADMIN")`.
+- **Path variables de ID restritas a números** (`{id:[0-9]+}`) nas rotas públicas de leitura de produto, evitando que segmentos de texto (como `novo` ou `editar`) sejam incorretamente reconhecidos como um ID e liberados publicamente.
 - **CSRF habilitado** (padrão do Spring Security) — todos os formulários de POST incluem o token CSRF.
 
 ---
