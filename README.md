@@ -204,3 +204,9 @@ Deploy realizado via **Docker** no [Render](https://render.com/), com um `Docker
 **Observações sobre o ambiente de produção:**
 - O plano utilizado é o **Free Tier** do Render, que hiberna a aplicação após períodos de inatividade — a primeira requisição após esse período pode demorar cerca de 1 minuto para responder, enquanto a instância "acorda".
 - A porta é configurada dinamicamente via variável de ambiente `PORT`, injetada automaticamente pelo Render (`server.port=${PORT:8082}`).
+
+---
+
+## Link yotube
+
+https://youtu.be/tBNKSl6JxDY
