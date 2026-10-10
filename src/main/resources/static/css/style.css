@@ -123,6 +123,27 @@ p[style*="color:red"], p[style*="color: red"] {
     margin: 0 auto 30px;
 }
 
+.divisor-login {
+    border: none;
+    border-top: 2px solid #ffffff;
+    width: 400px;
+    max-width: 90%;
+    margin: 0 auto 30px;
+}
+.divisor-cadastro {
+    border: none;
+    border-top: 2px solid #ffffff;
+    width: 400px;
+    max-width: 90%;
+    margin: 0 auto 30px;
+}
+.divisor-produto {
+    border: none;
+    border-top: 2px solid #ffffff;
+    width: 400px;
+    max-width: 90%;
+    margin: 0 auto 30px;
+}
 
 .hero p {
     line-height: 1.6;
@@ -191,4 +212,15 @@ p[style*="color:red"], p[style*="color: red"] {
     top: 15px;
     right: 15px;
     z-index: 1000;
+}
+
+.alerta-erro {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 16px auto;
+    max-width: 400px;
+    text-align: center;
 }
