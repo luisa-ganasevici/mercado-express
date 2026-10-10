@@ -20,4 +20,10 @@ public class SecurityController {
 
     @GetMapping("/home")
     public String retornohtml() { return "index"; }
+
+    @GetMapping("/admin/painel")
+    public String painelAdmin() {
+        return "painel-admin";
+    }
+
 }

@@ -57,6 +57,10 @@
         <td th:text="${produto.estoque}"></td>
         <td th:text="${produto.disponivel} ? 'Sim' : 'Não'"></td>
         <td>
+            <a th:href="@{/produtos/{id}(id=${produto.id})}">
+                <button type="button">Detalhes</button>
+            </a>
+
             <a th:if="${produto.disponivel}" th:href="@{/produtos/{id}/comprar(id=${produto.id})}">
                 <button type="button">Comprar</button>
             </a>

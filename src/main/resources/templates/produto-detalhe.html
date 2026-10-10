@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Detalhe do Produto - Mercado Express</title>
+</head>
+<body>
+
+<div class="voltar-topo">
+    <a th:href="@{/produtos}"><button type="button">Voltar</button></a>
+</div>
+
+<h1 th:text="${mercado.nome}">Produto</h1>
+<hr class="divisor-produto">
+
+<div class="dados-produto">
+    <p><strong>Código:</strong> <span th:text="${mercado.id}"></span></p>
+    <p><strong>Tipo:</strong> <span th:text="${mercado.tipo}"></span></p>
+    <p><strong>Setor:</strong> <span th:text="${mercado.setor}"></span></p>
+    <p><strong>Tamanho:</strong> <span th:text="${mercado.tamanho}"></span></p>
+    <p><strong>Cor:</strong> <span th:text="${mercado.cor}"></span></p>
+    <p><strong>Preço:</strong> <span th:text="${mercado.preco}"></span></p>
+    <p><strong>Estoque:</strong> <span th:text="${mercado.estoque}"></span></p>
+    <p><strong>Disponível:</strong> <span th:text="${mercado.disponivel} ? 'Sim' : 'Não'"></span></p>
+</div>
+
+<div class="acoes-compra">
+    <a th:if="${mercado.disponivel}" th:href="@{/produtos/{id}/comprar(id=${mercado.id})}">
+        <button type="button" class="btn-destaque">Comprar</button>
+    </a>
+    <span th:unless="${mercado.disponivel}">Indisponível</span>
+    <a th:if="${isAdmin}" th:href="@{/produtos/editar(id=${mercado.id})}">
+        <button type="button">Editar</button>
+    </a>
+</div>
+
+</body>
+</html>

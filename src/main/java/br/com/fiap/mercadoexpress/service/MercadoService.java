@@ -73,4 +73,8 @@ public class MercadoService {
         Mercado mercado = buscarPorId(id);
         mercadoRepository.delete(mercado);
     }
+
+    public List<Mercado> buscarPorNome(String nome) {
+        return mercadoRepository.findByNomeContainingIgnoreCase(nome);
+    }
 }
