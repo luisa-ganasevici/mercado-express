@@ -21,6 +21,8 @@
 <form th:action="@{/cadastro}" method="post" th:object="${usuario}">
   <label>Usuário</label><br>
   <input type="text" th:field="*{username}" required><br>
+  <label>E-mail</label><br>
+  <input type="email" th:field="*{email}" required><br>
   <label>Senha</label><br>
   <input type="password" th:field="*{password}" required><br><br>
   <button type="submit">Cadastrar</button>

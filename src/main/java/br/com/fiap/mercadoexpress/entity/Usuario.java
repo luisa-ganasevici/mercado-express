@@ -29,4 +29,7 @@ import lombok.NoArgsConstructor;
         @Column (name = "Role")
         private String role;
 
+        @Column(name = "email")
+        private String email;
+
     }
