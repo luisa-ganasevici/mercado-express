@@ -28,8 +28,10 @@ public class RegistroController {
     }
 
     @PostMapping("/cadastro")
-
-    public String usuario(@ModelAttribute Usuario usuario){
+    public String usuario(@ModelAttribute Usuario usuario) {
+        if (usuarioRepository.findByUsername(usuario.getUsername()).isPresent()) {
+            return "redirect:/cadastro?erro=usuario-existente";
+        }
 
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         usuario.setRole("CLIENTE");
