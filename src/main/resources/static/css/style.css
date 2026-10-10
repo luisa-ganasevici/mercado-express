@@ -224,3 +224,10 @@ p[style*="color:red"], p[style*="color: red"] {
     max-width: 400px;
     text-align: center;
 }
+
+.admin-fixo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="botaoAdmin" th:if="${adminLogado}" class="admin-fixo">
+    <a th:href="@{/admin/painel}">
+        <button type="button">Painel Admin</button>
+    </a>
+</div>
+
+</body>
+</html>
