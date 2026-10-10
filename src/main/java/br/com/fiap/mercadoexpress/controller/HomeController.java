@@ -26,10 +26,9 @@ public class HomeController {
     public ResponseEntity<EntityModel<Map<String, String>>> home() {
         Map<String, String> info = new LinkedHashMap<>();
         info.put("projeto", "Mercado Express API");
-        info.put("descricao", "CP4 - Parte 1 (API e Deploy) - FIAP TDS");
+        info.put("descricao", "CP5 - Parte I (Spring Security MVC e Deploy) - FIAP TDS");
         info.put("status", "no ar");
-        info.put("observacao", "Esta e a Parte 1 do checkpoint. Endpoints adicionais e funcionalidades serao adicionados nas proximas etapas.");
-
+        info.put("observacao", "Aplicação web com login, perfis ADMIN/CLIENTE e CRUD de produtos.");
         EntityModel<Map<String, String>> entityModel = EntityModel.of(info,
                 linkTo(methodOn(MercadoController.class).listarTodos()).withRel("mercados"));
 

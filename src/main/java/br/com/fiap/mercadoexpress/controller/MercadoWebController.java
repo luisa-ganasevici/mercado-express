@@ -1,6 +1,7 @@
 package br.com.fiap.mercadoexpress.controller;
 
 import br.com.fiap.mercadoexpress.entity.Mercado;
+import br.com.fiap.mercadoexpress.repository.MercadoRepository;
 import br.com.fiap.mercadoexpress.service.MercadoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -16,22 +17,26 @@ public class MercadoWebController {
 
     private final MercadoService mercadoService;
 
+
     @GetMapping("/produtos")
     public String getProdutos(@RequestParam(required = false) String nome,
                               Model model, Authentication authentication) {
-        List<Mercado> listaProdutos = mercadoService.listarTodos();
-
-        if (nome != null && !nome.isBlank()) {
-            listaProdutos = listaProdutos.stream()
-                    .filter(p -> p.getNome().toLowerCase().contains(nome.toLowerCase()))
-                    .toList();
-        }
+        List<Mercado> listaProdutos = (nome != null && !nome.isBlank())
+                ? mercadoService.buscarPorNome(nome)
+                : mercadoService.listarTodos();
 
         model.addAttribute("produtos", listaProdutos);
         model.addAttribute("isAdmin", isAdmin(authentication));
         model.addAttribute("logado", authentication != null && authentication.isAuthenticated());
         model.addAttribute("termoBusca", nome);
         return "produtos";
+    }
+
+    @GetMapping("/produtos/{id:\\d+}")
+    public String detalheProduto(@PathVariable Long id, Model model, Authentication authentication) {
+        model.addAttribute("mercado", mercadoService.buscarPorId(id));
+        model.addAttribute("isAdmin", isAdmin(authentication));
+        return "produto-detalhe";
     }
 
     @GetMapping("/produtos/novo")
