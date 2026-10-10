@@ -15,7 +15,9 @@
 
 <h1>Cadastro de Usuário</h1>
 <hr class="divisor-cadastro">
-
+<div th:if="${param.erro}" class="alerta-erro" style="color:red; text-align:center;">
+  Esse usuário já existe. Escolha outro nome.
+</div>
 <p style="text-align:center;">Cadastre-se!</p>
 
 <form th:action="@{/cadastro}" method="post" th:object="${usuario}">

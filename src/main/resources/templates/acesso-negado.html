@@ -1,26 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
     <meta charset="UTF-8">
-    <title>Acesso Negado</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Acesso negado - Mercado Express</title>
 </head>
 <body>
 
-<div class="hero">
-    <h1> Acesso Negado</h1>
-    <hr class="divisor-login">
+<div th:replace="~{fragments/admin :: botaoAdmin}"></div>
 
-    <div class="alerta-erro">
-        Você não tem permissão para acessar essa página.
-    </div>
+<h1>Acesso negado</h1>
+<hr class="divisor">
 
-    <div class="botoes">
-        <a th:href="@{/home}">
-            <button type="button">Voltar para o início</button>
-        </a>
-    </div>
+<p style="text-align:center;">Você não tem permissão para acessar esta página.</p>
+
+<div class="botoes">
+    <a th:href="@{/produtos}"><button type="button">Ver produtos</button></a>
+    <a th:href="@{/home/privado}"><button type="button">Início</button></a>
 </div>
 
 </body>

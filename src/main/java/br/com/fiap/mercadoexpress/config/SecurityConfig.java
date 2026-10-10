@@ -22,7 +22,7 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(authorizeConfig -> {
                     authorizeConfig.requestMatchers("/", "/api", "/home",
                             "/cadastro", "/login", "/logout",
-                            "/css/**", "/acesso-negado").permitAll();
+                            "/css/**", "/acesso-negado", "/error").permitAll();
 
                     authorizeConfig.requestMatchers(HttpMethod.GET, "/produtos", "/produtos/{id:[0-9]+}",
                             "/mercado", "/mercado/{id:[0-9]+}").permitAll();

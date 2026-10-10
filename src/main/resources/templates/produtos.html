@@ -6,7 +6,7 @@
     <title>Produtos - Mercado Express</title>
 </head>
 <body>
-
+<div th:replace="~{fragments/admin :: botaoAdmin}"></div>
 <div class="voltar-topo">
     <a th:if="${logado}" th:href="@{/home/privado}">
         <button type="button">Voltar</button>

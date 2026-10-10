@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Página não encontrada - Mercado Express</title>
+</head>
+<body>
+
+<div th:replace="~{fragments/admin :: botaoAdmin}"></div>
+
+<h1>Não encontrado</h1>
+<hr class="divisor">
+
+<p style="text-align:center;"
+   th:text="${mensagem} ?: 'A página que você procura não existe.'"></p>
+
+<div class="botoes">
+    <a th:href="@{/produtos}"><button type="button">Ver produtos</button></a>
+    <a th:href="@{/home}"><button type="button">Início</button></a>
+</div>
+
+</body>
+</html>

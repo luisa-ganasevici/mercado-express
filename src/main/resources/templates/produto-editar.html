@@ -10,7 +10,7 @@
 
 <h1>Editar Produto</h1>
 
-
+<div th:replace="~{fragments/admin :: botaoAdmin}"></div>
 
 <form th:action="@{/produtos/{id}/editar(id=${mercado.id})}" method="post" th:object="${mercado}">
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
