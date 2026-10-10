@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta charset="UTF-8">
+    <title>Acesso Negado</title>
+</head>
+<body>
+
+<div class="hero">
+    <h1> Acesso Negado</h1>
+    <hr class="divisor-login">
+
+    <div class="alerta-erro">
+        Você não tem permissão para acessar essa página.
+    </div>
+
+    <div class="botoes">
+        <a th:href="@{/home}">
+            <button type="button">Voltar para o início</button>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
