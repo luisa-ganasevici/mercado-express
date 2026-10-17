@@ -3,6 +3,10 @@ spring:
     name: banco-tranquilo-worker
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
-    port: ${RABBIT_PORT:5672}
+    port: 5672
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASS:guest}
+  datasource:
+    url: jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl
+    username: rm563403
+    password: 230107
