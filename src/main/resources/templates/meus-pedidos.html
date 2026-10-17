@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="5">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Meus pedidos - Mercado Express</title>
+</head>
+<body>
+
+<h1>Meus pedidos</h1>
+<hr class="divisor">
+
+<table>
+    <thead>
+    <tr><th>Nº</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Status</th><th>Data</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="p : ${pedidos}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.mercado.nome}"></td>
+        <td th:text="${p.quantidade}"></td>
+        <td th:text="${p.valorTotal}"></td>
+        <td th:text="${p.status}"></td>
+        <td th:text="${#temporals.format(p.dataPedido, 'dd/MM/yyyy HH:mm')}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="botoes">
+    <a th:href="@{/produtos}"><button type="button">Voltar aos produtos</button></a>
+</div>
+
+</body>
+</html>

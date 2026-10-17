@@ -8,7 +8,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import br.com.fiap.mercadoexpress.entity.Pedido;
+import br.com.fiap.mercadoexpress.service.PedidoService;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ import java.util.List;
 public class MercadoWebController {
 
     private final MercadoService mercadoService;
+    private final PedidoService pedidoService;
 
 
     @GetMapping("/produtos")
@@ -58,7 +60,10 @@ public class MercadoWebController {
     }
 
     @PostMapping("/produtos/{id}/comprar")
-    public String comprar(@PathVariable Long id, @RequestParam Integer quantidade, Model model) {
+    public String comprar(@PathVariable Long id,
+                          @RequestParam Integer quantidade,
+                          Authentication authentication,
+                          Model model) {
         Mercado mercado = mercadoService.buscarPorId(id);
 
         if (quantidade == null || quantidade <= 0 || quantidade > mercado.getEstoque()) {
@@ -67,9 +72,9 @@ public class MercadoWebController {
             return "produto-comprar";
         }
 
-        int novaQuantidade = mercado.getEstoque() - quantidade;
-        mercadoService.atualizarEstoque(id, novaQuantidade);
+        Pedido pedido = pedidoService.criarPedido(mercado, quantidade, authentication.getName());
 
+        model.addAttribute("pedido", pedido);
         model.addAttribute("mercado", mercado);
         model.addAttribute("quantidade", quantidade);
         return "compra-confirmada";

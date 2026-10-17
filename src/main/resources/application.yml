@@ -13,6 +13,11 @@ spring:
     baseline-on-migrate: true
     baseline-version: 1
     table: flyway_schema_history_mercado
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASS:guest}
   jpa:
     hibernate:
       ddl-auto: none
