@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Banco Tranquilo</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #ffffff; margin: 0; color: #1f2a44; }
+        .topo { background: #0d47a1; color: #fff; padding: 18px 24px; font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+        .box { max-width: 440px; margin: 40px auto; padding: 28px; border: 1px solid #d6e2f5; border-radius: 14px; box-shadow: 0 6px 20px rgba(13,71,161,.10); background: #fff; }
+        h1 { color: #0d47a1; margin: 0 0 18px; font-size: 24px; }
+        label { font-size: 14px; color: #44547a; }
+        input, button { width: 100%; padding: 11px; margin-top: 8px; font-size: 15px; border-radius: 8px; }
+        input { border: 1px solid #b9cbe8; outline: none; }
+        input:focus { border-color: #1976d2; box-shadow: 0 0 0 3px rgba(25,118,210,.15); }
+        button { background: #1565c0; color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+        button:hover { background: #0d47a1; }
+        .titular { color: #44547a; font-size: 14px; }
+        .saldo { font-size: 34px; font-weight: 700; color: #0d47a1; margin: 6px 0 0; }
+        .erro { color: #c62828; margin-top: 12px; font-size: 14px; }
+        hr { margin: 24px 0; border: 0; border-top: 1px solid #e3ebf7; }
+        a.voltar { display: block; text-align: center; margin-top: 8px; padding: 11px; border: 2px solid #1565c0; border-radius: 8px; color: #1565c0; text-decoration: none; font-weight: 600; font-size: 15px; }
+        a.voltar:hover { background: #e8f0fc; }
+    </style>
+</head>
+<body>
+<div class="topo">Banco Tranquilo</div>
+
+<div class="box">
+    <h1>Minha conta</h1>
+
+    <form method="get" action="/banco">
+        <label>Seu e-mail</label>
+        <input type="email" name="email" th:value="${email}" placeholder="seu@email.com" required>
+        <button type="submit">Ver saldo</button>
+    </form>
+
+    <div th:if="${erro}" class="erro" th:text="${erro}"></div>
+
+    <div th:if="${saldo != null}">
+        <hr>
+        <div class="titular" th:text="${titular}"></div>
+        <div class="saldo" th:text="'R$ ' + ${#numbers.formatDecimal(saldo, 1, 'POINT', 2, 'COMMA')}"></div>
+    </div>
+
+    <div th:if="${email != null}">
+        <hr>
+        <form method="post" action="/banco/adicionar">
+            <input type="hidden" name="email" th:value="${email}">
+            <label>Adicionar saldo (R$)</label>
+            <input type="number" name="valor" step="0.01" min="0.01" required>
+            <button type="submit">Adicionar</button>
+        </form>
+    </div>
+
+    <hr>
+    <a class="voltar" href="http://localhost:8082/home/privado">Voltar para a loja</a>
+</div>
+</body>
+</html>

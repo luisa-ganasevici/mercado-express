@@ -35,10 +35,12 @@ public class MercadoService {
         mercado.setTamanho(mercadoAtualizado.getTamanho());
         mercado.setCor(mercadoAtualizado.getCor());
         mercado.setPreco(mercadoAtualizado.getPreco());
+        mercado.setCusto(mercadoAtualizado.getCusto());
         mercado.setEstoque(mercadoAtualizado.getEstoque());
         mercado.setDisponivel(mercadoAtualizado.getDisponivel());
         return mercadoRepository.save(mercado);
     }
+
     public void marcarIndisponivel(Long id) {
         Mercado mercado = buscarPorId(id);
         mercado.setDisponivel(false);
@@ -62,6 +64,7 @@ public class MercadoService {
         if (mercadoParcial.getSetor() != null) mercado.setSetor(mercadoParcial.getSetor());
         if (mercadoParcial.getTamanho() != null) mercado.setTamanho(mercadoParcial.getTamanho());
         if (mercadoParcial.getPreco() != null) mercado.setPreco(mercadoParcial.getPreco());
+        if (mercadoParcial.getCusto() != null) mercado.setCusto(mercadoParcial.getCusto());
         if (mercadoParcial.getEstoque() != null) mercado.setEstoque(mercadoParcial.getEstoque());
         if (mercadoParcial.getCor() != null) mercado.setCor(mercadoParcial.getCor());
         if (mercadoParcial.getDisponivel() != null) mercado.setDisponivel(mercadoParcial.getDisponivel());

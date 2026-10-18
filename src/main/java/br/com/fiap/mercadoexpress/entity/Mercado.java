@@ -43,4 +43,7 @@ public class Mercado {
 
     @Column (name = "Disponivel")
     private Boolean disponivel = true;
+
+    @Column(name = "Custo", precision = 10, scale = 2)
+    private BigDecimal custo;
 }
