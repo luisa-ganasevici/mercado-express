@@ -197,54 +197,6 @@ Tudo acontece por botões e links na interface, sem Postman.
 
 ---
 
-### Configuração do Spring Initializr
-
-![Spring Initializr](docs/prints/spring-initializr.png)
-
----
-
-### Prints
-
-> Troque os caminhos pelas imagens reais, em `docs/prints/parte-1/`.
-
-**Landing page**
-![Landing page](docs/prints/parte-1/landing.png)
-
-**Tela de login**
-![Login](docs/prints/parte-1/login.png)
-
-**Cadastro (Sign Up)**
-![Cadastro](docs/prints/parte-1/cadastro.png)
-
-**Tela restrita após o login**
-![Tela restrita](docs/prints/parte-1/logado.png)
-
-**Lista de produtos (cliente)**
-![Produtos cliente](docs/prints/parte-1/produtos-cliente.png)
-
-**Lista de produtos (admin) com botões de CRUD**
-![Produtos admin](docs/prints/parte-1/produtos-admin.png)
-
-**Criar produto**
-![Criar](docs/prints/parte-1/criar.png)
-
-**Editar produto**
-![Editar](docs/prints/parte-1/editar.png)
-
-**Excluir produto**
-![Excluir](docs/prints/parte-1/excluir.png)
-
-**Acesso negado**
-![Acesso negado](docs/prints/parte-1/acesso-negado.png)
-
-**Tabelas no SQL Developer**
-![Banco](docs/prints/parte-1/banco.png)
-
-**Aplicação no ar (Render)**
-![Render](docs/prints/parte-1/render.png)
-
----
-
 # Parte 2 — Microsserviços com RabbitMQ
 
 > Código na branch `developCP5/parte-2`.
@@ -311,7 +263,7 @@ mercado-express/
 │       ├── controller/           # BancoController (tela de saldo)
 │       └── dto/                  # PagamentoRequest, PagamentoResponse
 ├── docker/docker-compose.yml     # RabbitMQ
-└── docs/                         # prints e coleção do Postman
+└── docs/                         # coleção do Postman
 ```
 
 ---
@@ -545,54 +497,6 @@ DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASS
 - Os dois apps precisam estar rodando ao mesmo tempo.
 - Se o Oracle reclamar de limite de sessões (`ORA-02391`), feche conexões abertas no SQL Developer. Os apps usam um pool pequeno do HikariCP para evitar isso.
 - A Parte 2 roda **localmente** (o deploy exigido está na Parte 1).
-
----
-
-### Prints
-
-> Troque os caminhos pelas imagens reais, em `docs/prints/parte-2/`.
-
-**Spring Initializr: loja**
-![Initializr loja](docs/prints/parte-2/initializr-loja.png)
-
-**Spring Initializr: Banco Tranquilo**
-![Initializr banco](docs/prints/parte-2/initializr-banco.png)
-
-**RabbitMQ: filas**
-![Filas](docs/prints/parte-2/rabbit-filas.png)
-
-**RabbitMQ: exchanges**
-![Exchanges](docs/prints/parte-2/rabbit-exchanges.png)
-
-**RabbitMQ: conexões**
-![Conexões](docs/prints/parte-2/rabbit-conexoes.png)
-
-**Compra: pedido pendente e depois pago**
-![Meus pedidos](docs/prints/parte-2/meus-pedidos.png)
-
-**Pedido recusado por saldo insuficiente**
-![Recusado](docs/prints/parte-2/recusado.png)
-
-**Postman: POST (202)**
-![Postman POST](docs/prints/parte-2/postman-post.png)
-
-**Postman: GET**
-![Postman GET](docs/prints/parte-2/postman-get.png)
-
-**E-mail de confirmação recebido**
-![E-mail](docs/prints/parte-2/email.png)
-
-**Tela do Banco Tranquilo**
-![Banco](docs/prints/parte-2/banco.png)
-
-**Dashboard da gerência**
-![Dashboard](docs/prints/parte-2/dashboard.png)
-
-**Tabelas no SQL Developer (pedido, e-mail log, conta)**
-![Tabelas](docs/prints/parte-2/sql.png)
-
-**Console do Banco Tranquilo aprovando e recusando**
-![Console](docs/prints/parte-2/console-banco.png)
 
 ---
 
