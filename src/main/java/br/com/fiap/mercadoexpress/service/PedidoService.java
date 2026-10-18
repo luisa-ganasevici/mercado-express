@@ -25,8 +25,13 @@ public class PedidoService {
     private final MercadoRepository mercadoRepository;
     private final UsuarioRepository usuarioRepository;
     private final PagamentoRequestProdutor requestProdutor;
-
     public Pedido criarPedido(Mercado mercado, Integer quantidade, String username) {
+        int reservado = mercadoRepository.reservarEstoque(mercado.getId(), quantidade);
+        if (reservado == 0) {
+            throw new IllegalStateException("Estoque insuficiente");
+        }
+        mercadoRepository.esconderSeZerado(mercado.getId(), false);
+
         String email = usuarioRepository.findByUsername(username)
                 .map(Usuario::getEmail)
                 .orElse(null);
@@ -47,7 +52,11 @@ public class PedidoService {
         pedido.setStatus(StatusPedido.PENDENTE);
         pedido = pedidoRepository.save(pedido);
 
-        requestProdutor.enviar(new PagamentoRequest(pedido.getId(), valorTotal, email));
+        try {
+            requestProdutor.enviar(new PagamentoRequest(pedido.getId(), valorTotal, email));
+        } catch (Exception e) {
+            recusarPagamento(pedido.getId(), "Falha ao contatar o Banco Tranquilo");
+        }
         return pedido;
     }
 
@@ -58,32 +67,26 @@ public class PedidoService {
             return Optional.empty();
         }
         Pedido pedido = opt.get();
-        Mercado mercado = pedido.getMercado();
-
-        if (mercado.getEstoque() == null || mercado.getEstoque() < pedido.getQuantidade()) {
-            pedido.setStatus(StatusPedido.RECUSADO);
-            return Optional.of(pedidoRepository.save(pedido));
-        }
-
-        int novoEstoque = mercado.getEstoque() - pedido.getQuantidade();
-        mercado.setEstoque(novoEstoque);
-        if (novoEstoque <= 0) {
-            mercado.setDisponivel(false);
-        }
-        mercadoRepository.save(mercado);
-
         pedido.setStatus(StatusPedido.PAGO);
+        pedido.setMotivo("Pagamento aprovado");
         return Optional.of(pedidoRepository.save(pedido));
     }
 
     @Transactional
-    public void recusarPagamento(Long pedidoId) {
-        pedidoRepository.findById(pedidoId).ifPresent(pedido -> {
-            if (pedido.getStatus() == StatusPedido.PENDENTE) {
-                pedido.setStatus(StatusPedido.RECUSADO);
-                pedidoRepository.save(pedido);
-            }
-        });
+    public void recusarPagamento(Long pedidoId, String motivo) {
+        Optional<Pedido> opt = pedidoRepository.findById(pedidoId);
+        if (opt.isEmpty() || opt.get().getStatus() != StatusPedido.PENDENTE) {
+            return;
+        }
+        Pedido pedido = opt.get();
+        Long mercadoId = pedido.getMercado().getId();
+        Integer qtd = pedido.getQuantidade();
+
+        pedido.setStatus(StatusPedido.RECUSADO);
+        pedido.setMotivo(motivo);
+        pedidoRepository.saveAndFlush(pedido);
+
+        mercadoRepository.devolverEstoque(mercadoId, qtd, true);
     }
 
     public List<Pedido> listarDoUsuario(String username) {

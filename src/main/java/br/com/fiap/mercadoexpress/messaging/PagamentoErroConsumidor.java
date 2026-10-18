@@ -16,6 +16,6 @@ public class PagamentoErroConsumidor {
     @RabbitListener(queues = RabbitConfig.ERRO_QUEUE)
     public void receber(PagamentoResponse resposta) {
         System.out.println("==== Mercado Express recebeu ERRO: " + resposta);
-        pedidoService.recusarPagamento(resposta.pedidoId());
+        pedidoService.recusarPagamento(resposta.pedidoId(), resposta.mensagem());
     }
 }

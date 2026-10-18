@@ -13,7 +13,15 @@
 
 <table>
     <thead>
-    <tr><th>Nº</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Status</th><th>Data</th></tr>
+    <tr>
+        <th>Nº</th>
+        <th>Produto</th>
+        <th>Qtd</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Motivo</th>
+        <th>Data</th>
+    </tr>
     </thead>
     <tbody>
     <tr th:each="p : ${pedidos}">
@@ -22,6 +30,7 @@
         <td th:text="${p.quantidade}"></td>
         <td th:text="${p.valorTotal}"></td>
         <td th:text="${p.status}"></td>
+        <td th:text="${p.motivo}"></td>
         <td th:text="${#temporals.format(p.dataPedido, 'dd/MM/yyyy HH:mm')}"></td>
     </tr>
     </tbody>

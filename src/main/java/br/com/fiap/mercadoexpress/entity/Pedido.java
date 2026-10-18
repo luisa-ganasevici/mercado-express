@@ -45,6 +45,9 @@ public class Pedido {
     @Column(name = "DATA_PEDIDO")
     private LocalDateTime dataPedido;
 
+    @Column(name = "MOTIVO", length = 200)
+    private String motivo;
+
     @PrePersist
     void antesDeSalvar() {
         if (dataPedido == null) {

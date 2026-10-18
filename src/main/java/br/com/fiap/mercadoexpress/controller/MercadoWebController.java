@@ -72,7 +72,15 @@ public class MercadoWebController {
             return "produto-comprar";
         }
 
-        Pedido pedido = pedidoService.criarPedido(mercado, quantidade, authentication.getName());
+        Pedido pedido;
+        try {
+            pedido = pedidoService.criarPedido(mercado, quantidade, authentication.getName());
+        } catch (IllegalStateException e) {
+            model.addAttribute("mercado", mercadoService.buscarPorId(id));
+            model.addAttribute("erro", "Quantidade indisponível em estoque.");
+            return "produto-comprar";
+        }
+
 
         model.addAttribute("pedido", pedido);
         model.addAttribute("mercado", mercado);
