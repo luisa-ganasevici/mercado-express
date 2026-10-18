@@ -1,10 +1,10 @@
-# Mercado Express — Checkpoint 5 · Parte 2 (Microsserviços com RabbitMQ)
+# Mercado Express — Checkpoint 5 (Parte 1 + Parte 2)
 
 FIAP — Faculdade de Informática e Administração Paulista
 Curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TDS) — Java Advanced
 Professor: Dr. Marcel Stefan Wagner
 
-O **Mercado Express** agora conversa com uma **API do Banco Tranquilo** por mensageria. Quando um cliente compra, o pedido vira uma mensagem no **RabbitMQ**. O Banco Tranquilo decide se aprova ou recusa. Se aprovar, o cliente recebe um **e-mail de confirmação**, que fica registrado no banco de dados. A gerência acompanha tudo em um **dashboard**.
+Aplicação web para uma empresa do tipo **mercado express**, feita com **Spring Boot**, **Spring MVC**, **Thymeleaf**, **Spring Security**, **RabbitMQ** e banco **Oracle**.
 
 ## Integrantes
 
@@ -15,31 +15,241 @@ O **Mercado Express** agora conversa com uma **API do Banco Tranquilo** por mens
 | Ana Carolina Pereira Fontes | RM 562145 |
 
 **IDE utilizada:** IntelliJ IDEA
-**Vídeo (5 a 7 min):** _colocar aqui o link do YouTube (não listado)_
 
-> A Parte 1 (Spring Security MVC + deploy) está na branch `developCP5/parte-1`.
+---
+
+## Onde está cada parte (branches)
+
+As duas partes do CP5 estão em **branches separadas**. Esta página (`main`) reúne a documentação das duas. O código de cada parte fica na sua branch:
+
+| Parte | O que é | Branch | Link |
+|---|---|---|---|
+| **Parte 1** | Spring Security MVC, CRUD, login/cadastro e **deploy na Render** | `developCP5/parte-1` | https://github.com/luisa-ganasevici/mercado-express/tree/developCP5/parte-1 |
+| **Parte 2** | Microsserviços com **RabbitMQ**, Banco Tranquilo, e-mail e dashboard | `developCP5/parte-2` | https://github.com/luisa-ganasevici/mercado-express/tree/developCP5/parte-2 |
+
+- **Deploy da Parte 1 (Render):** https://mercado-express-957x.onrender.com (a Render segue a branch `developCP5/parte-1`)
+- **Vídeo da Parte 2 (5 a 7 min):** _colocar aqui o link do YouTube (não listado)_
+
+Para baixar cada parte:
+```bash
+git clone https://github.com/luisa-ganasevici/mercado-express.git
+cd mercado-express
+git checkout developCP5/parte-1   # Parte 1
+git checkout developCP5/parte-2   # Parte 2
+```
+
+> A `main` não é usada para rodar o CP5. Ela guarda a documentação e o histórico das entregas anteriores.
 
 ---
 
 ## Índice
 
-1. [Visão geral](#visão-geral)
-2. [Tecnologias](#tecnologias)
-3. [Estrutura do repositório](#estrutura-do-repositório)
-4. [Fluxo da compra](#fluxo-da-compra)
-5. [RabbitMQ: exchanges e filas](#rabbitmq-exchanges-e-filas)
-6. [Regras do Banco Tranquilo](#regras-do-banco-tranquilo)
-7. [E-mail de confirmação](#e-mail-de-confirmação)
-8. [Telas](#telas)
-9. [API REST de pedidos e exemplo no Postman](#api-rest-de-pedidos-e-exemplo-no-postman)
-10. [Banco de dados](#banco-de-dados)
-11. [Como rodar](#como-rodar)
-12. [Prints](#prints)
-13. [Segurança](#segurança)
+- [Parte 1 — Spring Security MVC + Deploy](#parte-1--spring-security-mvc--deploy)
+- [Parte 2 — Microsserviços com RabbitMQ](#parte-2--microsserviços-com-rabbitmq)
 
 ---
 
-## Visão geral
+# Parte 1 — Spring Security MVC + Deploy
+
+> Código na branch `developCP5/parte-1`.
+
+### Tecnologias
+
+| Tecnologia | Uso |
+|---|---|
+| Java 21 | Linguagem |
+| Spring Boot | Framework principal |
+| Maven | Dependências e build |
+| Spring MVC + Thymeleaf | Telas renderizadas no servidor |
+| Spring Security | Login, cadastro, papéis e proteção de rotas |
+| Spring Data JPA (Hibernate) | Persistência |
+| Flyway | Versionamento do banco (`db/migration`) |
+| Oracle (ojdbc11) | Banco de dados (Oracle FIAP) |
+| Lombok | Menos código repetitivo |
+| Docker | Empacotamento para o deploy |
+
+> **Sobre o banco:** o enunciado sugere PostgreSQL, mas permite usar o SQL Developer. Usamos o **Oracle da FIAP**, acessado pelo SQL Developer.
+
+---
+
+### Arquitetura
+
+```
+br.com.fiap.mercadoexpress
+├── controller   -> recebe a requisição e devolve o nome do template Thymeleaf
+├── service      -> regras de negócio
+├── repository   -> acesso a dados (Spring Data JPA)
+├── entity       -> tabelas (Mercado, Usuario)
+├── config       -> Spring Security (SecurityConfig, LoginSuccessHandler)
+└── exception    -> tratamento de erros
+```
+
+Os controllers usam `@Controller` e retornam templates HTML (não JSON).
+
+---
+
+### Banco de dados
+
+Tabelas criadas pelo Flyway (`src/main/resources/db/migration`):
+
+| Tabela | Conteúdo |
+|---|---|
+| `TDS_TB_MERCADO` | Produtos: id, nome, tipo, setor, tamanho, cor, preço, estoque, disponível |
+| `TDS_TB_USUARIO` | Usuários: id, username, e-mail, senha (BCrypt), role (`CLIENTE` ou `ADMIN`) |
+
+A conexão é configurada em `application.yml`. **Usuário e senha do banco não ficam no código**: vêm das variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD`.
+
+---
+
+### Spring Security
+
+- **Tela de login própria** (`login.html`), diferente da padrão do Spring Security.
+- **Cadastro (Sign Up)** em `/cadastro`: quem não tem conta cria o perfil, que é salvo em `TDS_TB_USUARIO`, e depois faz login.
+- **Senhas** com hash BCrypt.
+- Após o login, o usuário vai para a tela restrita (`/home/privado`).
+- **Dois tipos de usuário:**
+    - `CLIENTE` (todo cadastro novo): vê produtos e compra.
+    - `ADMIN`: cria, edita e exclui produtos e gerencia usuários.
+- **Landing page:** `index.html` (`/home`).
+- **Acesso negado:** página própria em `/acesso-negado`.
+
+| Nível | Rotas | Quem acessa |
+|---|---|---|
+| Público | `/`, `/home`, `/cadastro`, `/login`, `/acesso-negado`, `/css/**` | Qualquer visitante |
+| Público (leitura) | `GET /produtos`, `GET /produtos/{id}` | Qualquer visitante |
+| Autenticado | `/produtos/{id}/comprar` | `CLIENTE` ou `ADMIN` |
+| Somente ADMIN | `/produtos/**`, `/usuarios/**`, `/admin/**` | `ADMIN` |
+
+O primeiro `ADMIN` é definido direto no banco (coluna `ROLE`). Depois, um `ADMIN` promove outros usuários pela tela `/usuarios`.
+
+---
+
+### Telas e CRUD
+
+Tudo acontece por botões e links na interface, sem Postman.
+
+| Operação | Como fazer |
+|---|---|
+| **Create** | Botão "Novo produto" (ADMIN) em `/produtos` → formulário → `POST /produtos` |
+| **Read** | `/produtos` lista tudo e tem busca por nome; "Comprar" abre o produto |
+| **Update** | Botão "Editar" (ADMIN) → `POST /produtos/{id}/editar`. A compra também baixa o estoque |
+| **Delete** | Botão "Excluir" (ADMIN) → `POST /produtos/{id}/excluir` |
+
+**Exclusão lógica:** o produto é marcado com `disponivel = false` e o registro continua no banco. Isso preserva o histórico.
+
+---
+
+### Endpoints
+
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| GET | `/`, `/home` | Público | Landing page |
+| GET | `/home/privado` | Autenticado | Tela restrita após login |
+| GET/POST | `/login` | Público | Login |
+| GET/POST | `/cadastro` | Público | Cria usuário (`CLIENTE`) |
+| GET | `/produtos` | Público | Lista e busca produtos |
+| GET | `/produtos/{id}` | Público | Detalhe do produto |
+| GET/POST | `/produtos/novo`, `/produtos` | ADMIN | Cria produto |
+| POST | `/produtos/{id}/editar` | ADMIN | Edita produto |
+| POST | `/produtos/{id}/excluir` | ADMIN | Exclusão lógica |
+| GET/POST | `/produtos/{id}/comprar` | Autenticado | Compra e baixa de estoque |
+| GET | `/usuarios` | ADMIN | Lista usuários |
+| POST | `/usuarios/{id}/promover` | ADMIN | Promove a `ADMIN` |
+| POST | `/usuarios/{id}/rebaixar` | ADMIN | Rebaixa a `CLIENTE` |
+
+---
+
+### Como rodar localmente
+
+**Pré-requisitos**
+- JDK 21 ou superior
+- Maven (ou o `mvnw` do projeto)
+- Acesso ao Oracle da FIAP
+
+**Passo a passo**
+1. Clone o repositório e troque para a branch da Parte 1:
+   ```bash
+   git clone https://github.com/luisa-ganasevici/mercado-express.git
+   cd mercado-express
+   git checkout developCP5/parte-1
+   ```
+2. Defina as variáveis de ambiente:
+    - `DB_USERNAME` = usuário do Oracle (ex.: `RM563403`)
+    - `DB_PASSWORD` = senha do Oracle
+
+   No IntelliJ: **Run → Edit Configurations →** campo **Environment variables**:
+   `DB_USERNAME=RM563403;DB_PASSWORD=sua_senha`
+3. Execute a classe `MercadoExpressApplication`. O Flyway cria as tabelas na primeira execução.
+4. Abra `http://localhost:8082`.
+5. Crie uma conta em `/cadastro` e entre em `/login`.
+
+---
+
+### Deploy
+
+- Plataforma: **Render** (Web Service com Docker).
+- Link: https://mercado-express-957x.onrender.com
+- O `Dockerfile` tem duas etapas: compila com Maven e roda só o `.jar` em uma imagem JRE enxuta.
+- A Render segue a branch `developCP5/parte-1`.
+- As variáveis `DB_USERNAME` e `DB_PASSWORD` ficam no painel da Render.
+- A porta vem da variável `PORT` (`server.port=${PORT:8082}`).
+- No plano gratuito, a primeira requisição após um período parado pode levar cerca de 1 minuto.
+
+---
+
+### Configuração do Spring Initializr
+
+![Spring Initializr](docs/prints/spring-initializr.png)
+
+---
+
+### Prints
+
+> Troque os caminhos pelas imagens reais, em `docs/prints/parte-1/`.
+
+**Landing page**
+![Landing page](docs/prints/parte-1/landing.png)
+
+**Tela de login**
+![Login](docs/prints/parte-1/login.png)
+
+**Cadastro (Sign Up)**
+![Cadastro](docs/prints/parte-1/cadastro.png)
+
+**Tela restrita após o login**
+![Tela restrita](docs/prints/parte-1/logado.png)
+
+**Lista de produtos (cliente)**
+![Produtos cliente](docs/prints/parte-1/produtos-cliente.png)
+
+**Lista de produtos (admin) com botões de CRUD**
+![Produtos admin](docs/prints/parte-1/produtos-admin.png)
+
+**Criar produto**
+![Criar](docs/prints/parte-1/criar.png)
+
+**Editar produto**
+![Editar](docs/prints/parte-1/editar.png)
+
+**Excluir produto**
+![Excluir](docs/prints/parte-1/excluir.png)
+
+**Acesso negado**
+![Acesso negado](docs/prints/parte-1/acesso-negado.png)
+
+**Tabelas no SQL Developer**
+![Banco](docs/prints/parte-1/banco.png)
+
+**Aplicação no ar (Render)**
+![Render](docs/prints/parte-1/render.png)
+
+---
+
+# Parte 2 — Microsserviços com RabbitMQ
+
+> Código na branch `developCP5/parte-2`.
+
+### Visão geral
 
 São **duas aplicações Spring Boot** que se comunicam só pelo RabbitMQ:
 
@@ -63,7 +273,7 @@ flowchart LR
 
 ---
 
-## Tecnologias
+### Tecnologias
 
 | Tecnologia | Uso |
 |---|---|
@@ -82,7 +292,7 @@ flowchart LR
 
 ---
 
-## Estrutura do repositório
+### Estrutura do repositório
 
 ```
 mercado-express/
@@ -106,7 +316,7 @@ mercado-express/
 
 ---
 
-## Fluxo da compra
+### Fluxo da compra
 
 1. O cliente compra pela tela ou pela API. A loja **grava o pedido como `PENDENTE`** e **reserva o estoque** na hora, com um `UPDATE` atômico que impede vender mais do que existe.
 2. A loja envia `PagamentoRequest` (pedido, valor, e-mail) para a fila `pagamento-request-queue`.
@@ -123,7 +333,7 @@ Se a loja não conseguir enviar a mensagem para o RabbitMQ, o pedido é recusado
 
 ---
 
-## RabbitMQ: exchanges e filas
+### RabbitMQ: exchanges e filas
 
 Todas as exchanges são do tipo `direct`, duráveis. As mensagens viajam em **JSON**.
 
@@ -164,7 +374,7 @@ Painel do RabbitMQ: http://localhost:15672 (usuário `guest`, senha `guest`).
 
 ---
 
-## Regras do Banco Tranquilo
+### Regras do Banco Tranquilo
 
 O Banco Tranquilo tem a tabela `TDS_TB_CONTA_BANCO` (e-mail, titular, saldo). A **ligação entre o cliente da loja e a conta é o e-mail** do cadastro.
 
@@ -178,7 +388,7 @@ O débito usa `SELECT ... FOR UPDATE`, então duas compras ao mesmo tempo não g
 
 ---
 
-## E-mail de confirmação
+### E-mail de confirmação
 
 - Enviado **somente quando o pagamento é aprovado**, para o e-mail do cliente que comprou.
 - Assunto: `Pagamento confirmado - Pedido N`.
@@ -187,7 +397,7 @@ O débito usa `SELECT ... FOR UPDATE`, então duas compras ao mesmo tempo não g
 
 ---
 
-## Telas
+### Telas
 
 | Tela | Endereço | Quem acessa |
 |---|---|---|
@@ -203,7 +413,7 @@ Na tela do banco, o cliente consulta o saldo e adiciona saldo (sem regras, só s
 
 ---
 
-## API REST de pedidos e exemplo no Postman
+### API REST de pedidos e exemplo no Postman
 
 Autenticação **HTTP Basic** (mesmo usuário e senha do login da loja).
 
@@ -245,7 +455,7 @@ A coleção do Postman está em `docs/postman/` (arquivo `.json`, para importar)
 
 ---
 
-## Banco de dados
+### Banco de dados
 
 | Tabela | Aplicação | Conteúdo |
 |---|---|---|
@@ -271,16 +481,16 @@ COMMIT;
 
 ---
 
-## Como rodar
+### Como rodar
 
-### Pré-requisitos
+#### Pré-requisitos
 - JDK 21 ou superior
 - Maven (ou `mvnw`)
 - **Docker Desktop** ligado
 - Acesso ao Oracle da FIAP
 - Conta Gmail com **verificação em duas etapas** e uma **senha de app** (Conta Google → Segurança → Senhas de app)
 
-### 1. Variáveis de ambiente
+#### 1. Variáveis de ambiente
 Cada aplicação usa as variáveis abaixo. No IntelliJ: **Run → Edit Configurations →** campo **Environment variables** (**não** use o campo "Active profiles").
 
 | Aplicação | Variáveis |
@@ -293,7 +503,14 @@ Exemplo na loja:
 DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASSWORD=abcdefghijklmnop
 ```
 
-### 2. Passo a passo (nesta ordem)
+#### 2. Passo a passo (nesta ordem)
+
+0. **Baixe a branch da Parte 2:**
+   ```bash
+   git clone https://github.com/luisa-ganasevici/mercado-express.git
+   cd mercado-express
+   git checkout developCP5/parte-2
+   ```
 
 1. **RabbitMQ (Docker)**
    ```bash
@@ -301,7 +518,7 @@ DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASS
    ```
    Confira em http://localhost:15672 (`guest` / `guest`).
 
-2. **Contas do Banco Tranquilo:** rode o SQL da seção [Banco de dados](#banco-de-dados) no SQL Developer e inclua também a conta do seu usuário da loja (com o mesmo e-mail do cadastro), por exemplo:
+2. **Contas do Banco Tranquilo:** rode o SQL da seção seção "Banco de dados" desta Parte 2 no SQL Developer e inclua também a conta do seu usuário da loja (com o mesmo e-mail do cadastro), por exemplo:
    ```sql
    INSERT INTO TDS_TB_CONTA_BANCO (EMAIL, TITULAR, SALDO) VALUES ('seu@email.com', 'Seu Nome', 1000);
    COMMIT;
@@ -324,14 +541,14 @@ DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASS
 
 6. **Demonstração do desacoplamento:** pare o Banco Tranquilo, faça uma compra (fica `PENDENTE` e a mensagem espera na fila do RabbitMQ). Suba o Banco Tranquilo de novo e o pedido vira `PAGO`.
 
-### Observações
+#### Observações
 - Os dois apps precisam estar rodando ao mesmo tempo.
 - Se o Oracle reclamar de limite de sessões (`ORA-02391`), feche conexões abertas no SQL Developer. Os apps usam um pool pequeno do HikariCP para evitar isso.
 - A Parte 2 roda **localmente** (o deploy exigido está na Parte 1).
 
 ---
 
-## Prints
+### Prints
 
 > Troque os caminhos pelas imagens reais, em `docs/prints/parte-2/`.
 
@@ -379,7 +596,7 @@ DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASS
 
 ---
 
-## Segurança
+### Segurança
 
 - **Nenhuma credencial vai para o repositório.** Usuário e senha do Oracle, e-mail e senha de app do Gmail vêm de variáveis de ambiente.
 - As informações de configuração do banco foram enviadas ao professor separadamente, pelo Teams.
