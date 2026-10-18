@@ -6,7 +6,16 @@ spring:
     port: 5672
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASS:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false
   datasource:
     url: jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl
-    username: rm563403
-    password: 230107
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
+
+server:
+  port: 8083

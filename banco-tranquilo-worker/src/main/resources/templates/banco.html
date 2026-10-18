@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Banco Tranquilo</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f2f5f4; margin: 0; }
+        .box { max-width: 420px; margin: 60px auto; background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.1); }
+        h1 { color: #1b5e20; margin-top: 0; }
+        input, button { width: 100%; padding: 10px; margin-top: 8px; box-sizing: border-box; font-size: 15px; }
+        button { background: #1b5e20; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+        .saldo { font-size: 32px; font-weight: bold; color: #1b5e20; margin: 12px 0; }
+        .erro { color: #c62828; margin-top: 12px; }
+        hr { margin: 24px 0; border: 0; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1>Banco Tranquilo</h1>
+
+    <form method="get" action="/banco">
+        <label>Seu e-mail</label>
+        <input type="email" name="email" th:value="${email}" placeholder="seu@email.com" required>
+        <button type="submit">Ver saldo</button>
+    </form>
+
+    <div th:if="${erro}" class="erro" th:text="${erro}"></div>
+
+    <div th:if="${saldo != null}">
+        <hr>
+        <div th:text="${titular}"></div>
+        <div class="saldo" th:text="'R$ ' + ${#numbers.formatDecimal(saldo, 1, 'POINT', 2, 'COMMA')}"></div>
+    </div>
+
+    <div th:if="${email != null}">
+        <hr>
+        <form method="post" action="/banco/adicionar">
+            <input type="hidden" name="email" th:value="${email}">
+            <label>Adicionar saldo (R$)</label>
+            <input type="number" name="valor" step="0.01" min="0.01" required>
+            <button type="submit">Adicionar</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
