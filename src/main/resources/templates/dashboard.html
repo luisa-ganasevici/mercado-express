@@ -2,15 +2,29 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" th:href="@{/css/style.css}">
   <title>Dashboard - Mercado Express</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     .cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 24px 0; }
-    .card { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 16px 24px; min-width: 160px; text-align: center; }
+    .card { background: #e8f0fc; color: #0d47a1; border-radius: 10px; padding: 16px 24px; min-width: 160px; text-align: center; font-size: 14px; }
     .card strong { display: block; font-size: 1.6em; margin-top: 6px; }
-    .grafico { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-    .grafico div { width: 420px; max-width: 100%; }
+
+    .graficos { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .painel { width: 420px; max-width: 100%; background: #ffffff; border: 1px solid #d6e2f5; border-radius: 12px; padding: 14px 18px; box-shadow: 0 4px 14px rgba(13, 71, 161, 0.10); }
+    .painel h3 { margin: 4px 0 12px; font-size: 16px; }
+    .linha { display: grid; grid-template-columns: 110px 1fr 95px; align-items: center; gap: 8px; margin: 9px 0; font-size: 14px; }
+    .rotulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trilho { background: #e8f0fc; border-radius: 6px; height: 16px; }
+    .barra { background: #1565c0; height: 100%; border-radius: 6px; }
+    .valor { text-align: right; font-weight: 600; color: #0d47a1; }
+    .vazio { text-align: center; color: #7a8bb0; font-size: 14px; }
+
+    .lucro .barra { background: #42a5f5; }
+    .estoque .barra { background: #90caf9; }
+    .status .barra.PENDENTE { background: #90caf9; }
+    .status .barra.PAGO { background: #1565c0; }
+    .status .barra.RECUSADO { background: #e5534b; }
   </style>
 </head>
 <body>
@@ -26,11 +40,47 @@
   <div class="card">Lucro (R$)<strong th:text="${#numbers.formatDecimal(lucro,1,'POINT',2,'COMMA')}"></strong></div>
 </div>
 
-<div class="grafico">
-  <div><canvas id="gVendas"></canvas></div>
-  <div><canvas id="gLucro"></canvas></div>
-  <div><canvas id="gEstoque"></canvas></div>
-  <div><canvas id="gStatus"></canvas></div>
+<div class="graficos">
+
+  <div class="painel">
+    <h3>Vendas por produto</h3>
+    <p class="vazio" th:if="${#lists.isEmpty(vendas)}">Sem vendas pagas ainda.</p>
+    <div class="linha" th:each="b : ${vendas}">
+      <span class="rotulo" th:text="${b.rotulo()}"></span>
+      <div class="trilho"><div class="barra" th:style="'width:' + ${b.pct()} + '%'"></div></div>
+      <span class="valor" th:text="${b.texto()}"></span>
+    </div>
+  </div>
+
+  <div class="painel lucro">
+    <h3>Lucro por produto</h3>
+    <p class="vazio" th:if="${#lists.isEmpty(lucros)}">Sem vendas pagas ainda.</p>
+    <div class="linha" th:each="b : ${lucros}">
+      <span class="rotulo" th:text="${b.rotulo()}"></span>
+      <div class="trilho"><div class="barra" th:style="'width:' + ${b.pct()} + '%'"></div></div>
+      <span class="valor" th:text="${b.texto()}"></span>
+    </div>
+  </div>
+
+  <div class="painel estoque">
+    <h3>Estoque atual</h3>
+    <p class="vazio" th:if="${#lists.isEmpty(estoque)}">Sem produtos.</p>
+    <div class="linha" th:each="b : ${estoque}">
+      <span class="rotulo" th:text="${b.rotulo()}"></span>
+      <div class="trilho"><div class="barra" th:style="'width:' + ${b.pct()} + '%'"></div></div>
+      <span class="valor" th:text="${b.texto()}"></span>
+    </div>
+  </div>
+
+  <div class="painel status">
+    <h3>Pedidos por status</h3>
+    <div class="linha" th:each="b : ${status}">
+      <span class="rotulo" th:text="${b.rotulo()}"></span>
+      <div class="trilho"><div class="barra" th:classappend="${b.rotulo()}" th:style="'width:' + ${b.pct()} + '%'"></div></div>
+      <span class="valor" th:text="${b.texto()}"></span>
+    </div>
+  </div>
+
 </div>
 
 <h2>Compras realizadas</h2>
@@ -55,34 +105,6 @@
 <div class="botoes">
   <a th:href="@{/admin/painel}"><button type="button">Voltar ao painel</button></a>
 </div>
-
-<script th:inline="javascript">
-  Chart.defaults.color = '#ffffff';
-  const vendasLabels = /*[[${vendasLabels}]]*/ [];
-  const vendasValores = /*[[${vendasValores}]]*/ [];
-  const lucroValores = /*[[${lucroValores}]]*/ [];
-  const estoqueLabels = /*[[${estoqueLabels}]]*/ [];
-  const estoqueValores = /*[[${estoqueValores}]]*/ [];
-  const statusLabels = /*[[${statusLabels}]]*/ [];
-  const statusValores = /*[[${statusValores}]]*/ [];
-
-  new Chart(document.getElementById('gVendas'), {
-      type: 'bar',
-      data: { labels: vendasLabels, datasets: [{ label: 'Vendas por produto (R$)', data: vendasValores, backgroundColor: '#4f8ef7' }] }
-  });
-  new Chart(document.getElementById('gLucro'), {
-      type: 'bar',
-      data: { labels: vendasLabels, datasets: [{ label: 'Lucro por produto (R$)', data: lucroValores, backgroundColor: '#3ecf8e' }] }
-  });
-  new Chart(document.getElementById('gEstoque'), {
-      type: 'bar',
-      data: { labels: estoqueLabels, datasets: [{ label: 'Estoque atual', data: estoqueValores, backgroundColor: '#f5a623' }] }
-  });
-  new Chart(document.getElementById('gStatus'), {
-      type: 'doughnut',
-      data: { labels: statusLabels, datasets: [{ data: statusValores, backgroundColor: ['#f5a623', '#3ecf8e', '#e5534b'] }] }
-  });
-</script>
 
 </body>
 </html>

@@ -18,6 +18,8 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class AdminDashboardController {
 
+    public record Barra(String rotulo, String texto, int pct) {}
+
     private final PedidoService pedidoService;
     private final MercadoRepository mercadoRepository;
 
@@ -30,23 +32,24 @@ public class AdminDashboardController {
         BigDecimal receita = soma(pagos, Pedido::getValorTotal);
         BigDecimal custo = soma(pagos, Pedido::getCustoTotal);
 
-        Map<String, BigDecimal> vendas = new LinkedHashMap<>();
-        Map<String, BigDecimal> lucros = new LinkedHashMap<>();
+        Map<String, Double> vendas = new LinkedHashMap<>();
+        Map<String, Double> lucros = new LinkedHashMap<>();
         for (Pedido p : pagos) {
             String nome = p.getMercado().getNome();
             BigDecimal c = p.getCustoTotal() == null ? BigDecimal.ZERO : p.getCustoTotal();
-            vendas.merge(nome, p.getValorTotal(), BigDecimal::add);
-            lucros.merge(nome, p.getValorTotal().subtract(c), BigDecimal::add);
+            vendas.merge(nome, p.getValorTotal().doubleValue(), Double::sum);
+            lucros.merge(nome, p.getValorTotal().subtract(c).doubleValue(), Double::sum);
         }
 
-        List<String> statusLabels = new ArrayList<>();
-        List<Long> statusValores = new ArrayList<>();
+        Map<String, Double> status = new LinkedHashMap<>();
         for (StatusPedido s : StatusPedido.values()) {
-            statusLabels.add(s.name());
-            statusValores.add(pedidos.stream().filter(p -> p.getStatus() == s).count());
+            status.put(s.name(), (double) pedidos.stream().filter(p -> p.getStatus() == s).count());
         }
 
-        List<Mercado> produtos = mercadoRepository.findAll();
+        Map<String, Double> estoque = new LinkedHashMap<>();
+        for (Mercado m : mercadoRepository.findAll()) {
+            estoque.put(m.getNome(), (double) (m.getEstoque() == null ? 0 : m.getEstoque()));
+        }
 
         model.addAttribute("pedidos", pedidos);
         model.addAttribute("totalPedidos", pedidos.size());
@@ -54,15 +57,25 @@ public class AdminDashboardController {
         model.addAttribute("receita", receita);
         model.addAttribute("custo", custo);
         model.addAttribute("lucro", receita.subtract(custo));
-        model.addAttribute("vendasLabels", new ArrayList<>(vendas.keySet()));
-        model.addAttribute("vendasValores", vendas.values().stream().map(BigDecimal::doubleValue).toList());
-        model.addAttribute("lucroValores", lucros.values().stream().map(BigDecimal::doubleValue).toList());
-        model.addAttribute("statusLabels", statusLabels);
-        model.addAttribute("statusValores", statusValores);
-        model.addAttribute("estoqueLabels", produtos.stream().map(Mercado::getNome).toList());
-        model.addAttribute("estoqueValores", produtos.stream()
-                .map(m -> m.getEstoque() == null ? 0 : m.getEstoque()).toList());
+        model.addAttribute("vendas", barras(vendas, true));
+        model.addAttribute("lucros", barras(lucros, true));
+        model.addAttribute("estoque", barras(estoque, false));
+        model.addAttribute("status", barras(status, false));
         return "dashboard";
+    }
+
+    private List<Barra> barras(Map<String, Double> dados, boolean moeda) {
+        double max = dados.values().stream().mapToDouble(Double::doubleValue).max().orElse(0);
+        List<Barra> lista = new ArrayList<>();
+        for (Map.Entry<String, Double> e : dados.entrySet()) {
+            double v = e.getValue();
+            int pct = (max <= 0 || v <= 0) ? 0 : (int) Math.max(2, Math.round(v * 100 / max));
+            String texto = moeda
+                    ? String.format(Locale.of("pt", "BR"), "R$ %,.2f", v)
+                    : String.valueOf((long) v);
+            lista.add(new Barra(e.getKey(), texto, pct));
+        }
+        return lista;
     }
 
     private BigDecimal soma(List<Pedido> lista, Function<Pedido, BigDecimal> campo) {

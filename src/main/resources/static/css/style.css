@@ -1,39 +1,43 @@
-
 .voltar-topo {
     position: fixed;
     top: 15px;
     left: 15px;
     z-index: 1000;
 }
+
 body {
-    background-color: #696969;
-    color: #ffffff;
-    font-family: Arial, Helvetica, sans-serif;
+    background-color: #ffffff;
+    color: #1f2a44;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 20px;
 }
 
 h1, h2, h3 {
     text-align: center;
+    color: #0d47a1;
 }
 
+a {
+    text-decoration: none;
+}
 
 button {
-    background-color: #6495ED;
+    background-color: #1565c0;
     color: #ffffff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 10px 18px;
     font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     margin: 5px;
     transition: background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: #4a7fd6;
+    background-color: #0d47a1;
 }
-
 
 .botoes {
     display: flex;
@@ -44,24 +48,30 @@ button:hover {
     width: fit-content;
 }
 
-
 table {
     margin: 20px auto;
     border-collapse: collapse;
-    background-color: #808080;
-    color: #ffffff;
+    background-color: #ffffff;
+    color: #1f2a44;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.10);
 }
 
 table th, table td {
     padding: 10px 16px;
     text-align: center;
-    border: 1px solid #ffffff;
+    border: 1px solid #d6e2f5;
 }
 
 table th {
-    background-color: #5a5a5a;
+    background-color: #0d47a1;
+    color: #ffffff;
 }
 
+table tbody tr:nth-child(even) {
+    background-color: #f4f8fe;
+}
 
 form {
     max-width: 400px;
@@ -73,26 +83,28 @@ form {
 
 form label {
     font-weight: bold;
+    color: #44547a;
 }
 
 form input[type="text"],
 form input[type="password"],
-form input[type="number"] {
-    padding: 8px;
-    border-radius: 4px;
-    border: none;
+form input[type="number"],
+form input[type="email"] {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #b9cbe8;
+    outline: none;
+    font-size: 15px;
 }
 
-
-a {
-    text-decoration: none;
+form input:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
 }
-
 
 p[style*="color:red"], p[style*="color: red"] {
     text-align: center;
 }
-
 
 .auth-topo {
     position: fixed;
@@ -102,7 +114,6 @@ p[style*="color:red"], p[style*="color: red"] {
     gap: 10px;
     z-index: 1000;
 }
-
 
 .hero {
     max-width: 700px;
@@ -115,49 +126,34 @@ p[style*="color:red"], p[style*="color: red"] {
     margin-bottom: 20px;
 }
 
-
-.divisor {
-    border: none;
-    border-top: 2px solid #ffffff;
-    width: 60%;
-    margin: 0 auto 30px;
-}
-
-.divisor-login {
-    border: none;
-    border-top: 2px solid #ffffff;
-    width: 400px;
-    max-width: 90%;
-    margin: 0 auto 30px;
-}
-.divisor-cadastro {
-    border: none;
-    border-top: 2px solid #ffffff;
-    width: 400px;
-    max-width: 90%;
-    margin: 0 auto 30px;
-}
-.divisor-produto {
-    border: none;
-    border-top: 2px solid #ffffff;
-    width: 400px;
-    max-width: 90%;
-    margin: 0 auto 30px;
-}
-
 .hero p {
     line-height: 1.6;
     margin-bottom: 20px;
     text-align: left;
 }
 
+.divisor {
+    border: none;
+    border-top: 2px solid #1565c0;
+    width: 60%;
+    margin: 0 auto 30px;
+}
+
+.divisor-login,
+.divisor-cadastro,
+.divisor-produto {
+    border: none;
+    border-top: 2px solid #1565c0;
+    width: 400px;
+    max-width: 90%;
+    margin: 0 auto 30px;
+}
 
 .btn-destaque {
     font-size: 17px;
     padding: 12px 28px;
     margin-top: 15px;
 }
-
 
 .cadastro-link {
     text-align: center;
@@ -167,7 +163,6 @@ p[style*="color:red"], p[style*="color: red"] {
 .cadastro-link p {
     margin-bottom: 10px;
 }
-
 
 .titulo-linha {
     display: flex;
@@ -182,13 +177,11 @@ p[style*="color:red"], p[style*="color: red"] {
     margin: 0;
 }
 
-
 .dados-produto {
     max-width: 400px;
     margin: 20px auto;
     text-align: center;
 }
-
 
 .acoes-compra {
     display: flex;
@@ -202,11 +195,6 @@ p[style*="color:red"], p[style*="color: red"] {
     margin: 0;
 }
 
-.btn-destaque {
-    font-size: 17px;
-    padding: 12px 28px;
-}
-
 .logout-topo {
     position: fixed;
     top: 15px;
@@ -215,10 +203,10 @@ p[style*="color:red"], p[style*="color: red"] {
 }
 
 .alerta-erro {
-    background-color: #f8d7da;
+    background-color: #fdecea;
     color: #842029;
     border: 1px solid #f5c2c7;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 12px;
     margin: 16px auto;
     max-width: 400px;
