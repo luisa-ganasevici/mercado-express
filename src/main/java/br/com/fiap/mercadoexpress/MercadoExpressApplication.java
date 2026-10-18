@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableRabbit
+@EnableRabbit	
 public class  MercadoExpressApplication {
 
 	public static void main(String[] args) {
