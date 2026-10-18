@@ -1,212 +1,387 @@
-# Mercado Express — Web (Thymeleaf + Spring Security)
+# Mercado Express — Checkpoint 5 · Parte 2 (Microsserviços com RabbitMQ)
 
-Checkpoint 4 — Parte 2 (Spring Web, Spring MVC, Security e Deploy)
-FIAP — Curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TDS)
+FIAP — Faculdade de Informática e Administração Paulista
+Curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TDS) — Java Advanced
+Professor: Dr. Marcel Stefan Wagner
 
-Aplicação web para gerenciamento de produtos de um "mercado express", desenvolvida em **Spring Boot** com **Spring MVC**, **Thymeleaf** como motor de templates e **Spring Security** para autenticação e autorização de rotas. Persistência no mesmo banco **Oracle** utilizado na Parte 1.
+O **Mercado Express** agora conversa com uma **API do Banco Tranquilo** por mensageria. Quando um cliente compra, o pedido vira uma mensagem no **RabbitMQ**. O Banco Tranquilo decide se aprova ou recusa. Se aprovar, o cliente recebe um **e-mail de confirmação**, que fica registrado no banco de dados. A gerência acompanha tudo em um **dashboard**.
 
 ## Integrantes
 
-- Matheus Moya de Oliveira — RM 562822
-- Luisa Ganasevici de Abreu — RM 563403
-- Ana Carolina Pereira Fontes — RM 562145
+| Nome | RM |
+|---|---|
+| Matheus Moya de Oliveira | RM 562822 |
+| Luisa Ganasevici de Abreu | RM 563403 |
+| Ana Carolina Pereira Fontes | RM 562145 |
 
 **IDE utilizada:** IntelliJ IDEA
+**Vídeo (5 a 7 min):** _colocar aqui o link do YouTube (não listado)_
+
+> A Parte 1 (Spring Security MVC + deploy) está na branch `developCP5/parte-1`.
 
 ---
 
 ## Índice
 
-1. [Tecnologias utilizadas](#tecnologias-utilizadas)
-2. [Arquitetura do projeto](#arquitetura-do-projeto)
-3. [Modelagem da entidade `Mercado`](#modelagem-da-entidade-mercado)
-4. [Configuração do banco de dados](#configuração-do-banco-de-dados)
-5. [Spring Security — rotas públicas e privadas](#spring-security--rotas-públicas-e-privadas)
-6. [Telas e funcionalidades (CRUD via interface Web)](#telas-e-funcionalidades-crud-via-interface-web)
-7. [Endpoints](#endpoints)
-8. [Tratamento de erros](#tratamento-de-erros)
-9. [Pré-requisitos e como executar localmente](#pré-requisitos-e-como-executar-localmente)
-10. [Segurança e boas práticas](#segurança-e-boas-práticas)
-11. [Deploy](#deploy)
+1. [Visão geral](#visão-geral)
+2. [Tecnologias](#tecnologias)
+3. [Estrutura do repositório](#estrutura-do-repositório)
+4. [Fluxo da compra](#fluxo-da-compra)
+5. [RabbitMQ: exchanges e filas](#rabbitmq-exchanges-e-filas)
+6. [Regras do Banco Tranquilo](#regras-do-banco-tranquilo)
+7. [E-mail de confirmação](#e-mail-de-confirmação)
+8. [Telas](#telas)
+9. [API REST de pedidos e exemplo no Postman](#api-rest-de-pedidos-e-exemplo-no-postman)
+10. [Banco de dados](#banco-de-dados)
+11. [Como rodar](#como-rodar)
+12. [Prints](#prints)
+13. [Segurança](#segurança)
 
 ---
 
-## Tecnologias utilizadas
+## Visão geral
 
-| Tecnologia | Finalidade |
+São **duas aplicações Spring Boot** que se comunicam só pelo RabbitMQ:
+
+| Aplicação | Pasta | Porta | Papel |
+|---|---|---|---|
+| **Mercado Express** (loja) | raiz do repositório | 8082 | Telas, compra, API de pedidos, e-mail, dashboard |
+| **Banco Tranquilo** (worker) | `banco-tranquilo-worker/` | 8083 | Consome pedidos, aprova ou recusa, tela de saldo |
+
+```mermaid
+flowchart LR
+    C[Cliente / Postman] --> L[Mercado Express<br/>:8082]
+    L -->|1 grava pedido PENDENTE<br/>e reserva estoque| DB[(Oracle)]
+    L -->|2 pagamento-request| Q1[[RabbitMQ]]
+    Q1 --> B[Banco Tranquilo<br/>:8083]
+    B -->|consulta e debita saldo| DB
+    B -->|3 sucesso ou erro| Q1
+    Q1 -->|4 resposta| L
+    L -->|5 PAGO + e-mail| E[Gmail SMTP]
+    L -->|log do e-mail| DB
+```
+
+---
+
+## Tecnologias
+
+| Tecnologia | Uso |
 |---|---|
-| Java 21 (LTS) | Linguagem |
-| Spring Boot | Framework principal |
-| Maven | Gerenciador de dependências e build |
-| Spring MVC | Controllers Web, roteamento de páginas |
-| Thymeleaf | Motor de templates HTML |
-| Spring Security | Autenticação, autorização e controle de rotas públicas/privadas |
-| Spring Data JPA | Persistência de dados via Hibernate |
-| Lombok | Redução de código boilerplate (getters, setters, construtores) |
-| Oracle Driver (JDBC) | Conexão com o banco de dados Oracle (ORACLE_FIAP) |
-| Docker | Empacotamento da aplicação para o deploy |
+| Java 21 (rodando também em 25) | Linguagem |
+| Spring Boot 4 (Spring Initializr) | Base das duas aplicações |
+| Spring AMQP / RabbitMQ 3 | Mensageria (exchanges, queues, bindings, `@RabbitListener`) |
+| Docker | Sobe o RabbitMQ |
+| Spring Data JPA, Flyway | Banco da loja e migrations |
+| Spring JDBC (`JdbcTemplate`) | Banco do worker |
+| Spring Security (form login + HTTP Basic) | Telas e API |
+| Spring Mail (Gmail SMTP) | E-mail de confirmação |
+| Thymeleaf, Lombok | Telas e código mais limpo |
+| Oracle (FIAP) | Banco de dados |
+
+> O enunciado prefere PostgreSQL, mas permite Oracle SQL Developer. Mantivemos o **Oracle** da Parte 1.
 
 ---
 
-## Arquitetura do projeto
+## Estrutura do repositório
 
 ```
-br.com.fiap.mercadoexpress
-├── controller     -> Recebe requisições HTTP, monta o Model e retorna o nome da página Thymeleaf
-├── service        -> Regras de negócio, orquestra o fluxo entre Controller e Repository
-├── repository     -> Acesso a dados via Spring Data JPA
-├── entity         -> Representação das tabelas do banco de dados (Mercado, Usuario)
-├── config         -> Configuração do Spring Security
-└── exception      -> Tratamento centralizado de erros (ex: recurso não encontrado)
+mercado-express/
+├── src/                          # loja (Mercado Express)
+│   └── main/java/br/com/fiap/mercadoexpress
+│       ├── controller/           # telas, API de pedidos, dashboard, ponte para o banco
+│       ├── service/              # PedidoService, EmailService
+│       ├── messaging/            # produtor e consumidores do RabbitMQ
+│       ├── entity/               # Pedido, EmailLog, Mercado, Usuario
+│       └── config/               # RabbitConfig, SecurityConfig
+├── banco-tranquilo-worker/       # microsserviço do banco
+│   └── src/main/java/br/com/fiap/banco_tranquilo_worker
+│       ├── config/               # RabbitConfig
+│       ├── consumer/             # PagamentoRequestConsumidor
+│       ├── service/              # ContaService (regras do banco)
+│       ├── controller/           # BancoController (tela de saldo)
+│       └── dto/                  # PagamentoRequest, PagamentoResponse
+├── docker/docker-compose.yml     # RabbitMQ
+└── docs/                         # prints e coleção do Postman
 ```
-
-Diferente da Parte 1 (API REST pura, retornando JSON), aqui os `Controllers` retornam o **nome de um template Thymeleaf**, que é renderizado no servidor e devolvido como HTML pronto para o navegador — por isso a anotação usada é `@Controller` (não `@RestController`).
 
 ---
 
-## Modelagem da entidade `Mercado`
+## Fluxo da compra
 
-Mesma tabela utilizada na Parte 1 (`TDS_TB_mercado`), no banco Oracle da FIAP, reaproveitada nesta Parte 2:
+1. O cliente compra pela tela ou pela API. A loja **grava o pedido como `PENDENTE`** e **reserva o estoque** na hora, com um `UPDATE` atômico que impede vender mais do que existe.
+2. A loja envia `PagamentoRequest` (pedido, valor, e-mail) para a fila `pagamento-request-queue`.
+3. O **Banco Tranquilo** consome a mensagem, procura a conta pelo **e-mail** e decide.
+4. Ele responde na fila de **sucesso** ou de **erro**.
+5. A loja consome a resposta:
+    - **Aprovado:** pedido vira `PAGO`, o **e-mail é enviado** e o envio é gravado em `TDS_TB_EMAIL_LOG`.
+    - **Recusado:** pedido vira `RECUSADO`, com o **motivo**, e o **estoque volta**.
+6. O cliente acompanha em **Meus pedidos** (a tela atualiza sozinha a cada 5 segundos).
 
-| Campo | Tipo Java | Coluna no Oracle | Observação |
+**Se o Banco Tranquilo estiver fora do ar**, os pedidos ficam `PENDENTE` na fila e são processados quando ele volta (a mensagem não se perde).
+
+Se a loja não conseguir enviar a mensagem para o RabbitMQ, o pedido é recusado na hora, com o motivo "Falha ao contatar o Banco Tranquilo", e o estoque volta.
+
+---
+
+## RabbitMQ: exchanges e filas
+
+Todas as exchanges são do tipo `direct`, duráveis. As mensagens viajam em **JSON**.
+
+| Exchange | Routing key | Queue | Quem publica → quem consome |
 |---|---|---|---|
-| id | `Long` | Id | Gerado via `SEQUENCE` do Oracle (`MERCADO_SEQ`) |
-| nome | `String` | Nome | — |
-| tipo | `String` | Tipo | — |
-| setor | `String` | Setor | — |
-| tamanho | `String` | Tamanho | — |
-| cor | `String` | Cor | — |
-| preco | `BigDecimal` | Preco | `BigDecimal` para evitar erros de arredondamento em valores monetários |
-| estoque | `Integer` | Estoque | Controlado também pela tela de compra (baixa automática do estoque) |
-| disponivel | `Boolean` | Disponivel | Usado para "exclusão lógica" (ver seção de CRUD abaixo) |
+| `pagamento-request-exchange` | `pagamento-request-rout-key` | `pagamento-request-queue` | Loja → Banco |
+| `pagamento-response-sucesso-exchange` | `pagamento-response-sucesso-rout-key` | `pagamento-response-sucesso-queue` | Banco → Loja |
+| `pagamento-response-erro-exchange` | `pagamento-response-erro-rout-key` | `pagamento-response-erro-queue` | Banco → Loja |
 
-Também existe a entidade `Usuario`, usada pelo Spring Security para autenticação (login, cadastro, papéis `ADMIN`/`CLIENTE`).
+**Requisição** (loja → banco):
+```json
+{
+  "pedidoId": 16,
+  "valor": 39.99,
+  "email": "cliente@email.com"
+}
+```
+
+**Resposta de sucesso** (banco → loja):
+```json
+{
+  "pedidoId": 16,
+  "status": "APROVADO",
+  "mensagem": "Pagamento aprovado"
+}
+```
+
+**Resposta de erro** (banco → loja):
+```json
+{
+  "pedidoId": 17,
+  "status": "RECUSADO",
+  "mensagem": "Saldo insuficiente"
+}
+```
+
+Painel do RabbitMQ: http://localhost:15672 (usuário `guest`, senha `guest`).
 
 ---
 
-## Spring Security — rotas públicas e privadas
+## Regras do Banco Tranquilo
 
-A aplicação define três níveis de acesso, configurados em `SecurityConfig`:
+O Banco Tranquilo tem a tabela `TDS_TB_CONTA_BANCO` (e-mail, titular, saldo). A **ligação entre o cliente da loja e a conta é o e-mail** do cadastro.
 
-| Nível | Rotas | Quem acessa |
+| Situação | Resultado | Mensagem |
 |---|---|---|
-| **Público** | `/`, `/home`, `/cadastro`, `/login`, `/logout`, `/acesso-negado`, `/css/**`| Qualquer visitante, sem login |
-| **Público (leitura)** | `GET /produtos`, `GET /produtos/{id}` (somente ID numérico) | Qualquer visitante pode navegar e ver os produtos, sem precisar de conta |
-| **Autenticado** | `/produtos/{id}/comprar` | Qualquer usuário logado (`CLIENTE` ou `ADMIN`) |
-| **Somente ADMIN** | `/produtos/**` (criar, editar, excluir), `/usuarios/**` | Apenas usuários com papel `ADMIN` |
+| Não existe conta com o e-mail | Recusado | `Conta nao encontrada no Banco Tranquilo` |
+| Saldo menor que o valor | Recusado | `Saldo insuficiente` |
+| Saldo suficiente | **Aprovado** e o valor é debitado | `Pagamento aprovado` |
 
-**Login:** implementado via `formLogin` do Spring Security, com uma página de login customizada em Thymeleaf (`login.html`). Em caso de usuário/senha inválidos, o usuário é redirecionado de volta para `/login?error=true`, exibindo uma mensagem de erro na própria tela — sem precisar de uma página separada.
-
-**Acesso negado:** usuários autenticados sem permissão suficiente para acessar uma rota (ex: `CLIENTE` tentando acessar rota de `ADMIN`) são direcionados para a página `/acesso-negado`, estilizada com o mesmo padrão visual da aplicação.
-
-**Senhas:** armazenadas com hash `BCrypt` (`BCryptPasswordEncoder`), nunca em texto puro no banco.
-
-**Papéis (roles):** todo novo cadastro nasce com o papel `CLIENTE`. Um usuário `ADMIN` pode promover ou rebaixar outros usuários pela tela `/usuarios`, com uma trava que impede o próprio admin de se rebaixar por engano.
+O débito usa `SELECT ... FOR UPDATE`, então duas compras ao mesmo tempo não gastam o mesmo saldo.
 
 ---
 
-## Telas e funcionalidades (CRUD via interface Web)
+## E-mail de confirmação
 
-Todas as operações abaixo são acionadas por **botões/links na interface**, sem necessidade de ferramentas externas (Postman, etc.):
-
-### Create
-Botão **"Novo produto"** (visível apenas para `ADMIN`, na tela `/produtos`) → abre o formulário `produto-form.html` → salva via `POST /produtos`.
-
-### Read
-- Tela `/produtos`: lista todos os produtos cadastrados, com busca por nome (`?nome=...`), que filtra a lista dinamicamente e exibe uma mensagem de "produto não encontrado" quando a busca não retorna resultados.
-- Botão **"Comprar"**: abre a tela de compra de um produto específico (`GET /produtos/{id}/comprar`).
-
-### Update
-- Botão **"Editar"** (ADMIN): abre `produto-editar.html`, pré-preenchido com os dados atuais, salvando via `POST /produtos/{id}/editar`.
-- Atualização rápida de estoque via `POST /produtos/{id}/estoque`, também usada automaticamente quando um cliente finaliza uma compra (baixa do estoque comprado).
-
-### Delete
-Botão **"Excluir"** (ADMIN) → `POST /produtos/{id}/excluir`.
-
-> **Sobre a estratégia de exclusão:** optamos por uma soft delete em vez de remover fisicamente o registro do banco — o produto é marcado com `disponivel = false` e deixa de aparecer disponível para compra, mas o registro é preservado. Essa decisão evita a perda de histórico de vendas/estoque associado ao produto e reflete uma prática comum em sistemas de e-commerce reais.
-
-### Cadastro e Login de usuários
-- `/cadastro`: formulário de criação de conta (papel inicial `CLIENTE`).
-- `/login`: autenticação via Spring Security, com tela de erro amigável em caso de credenciais inválidas.
-- `/usuarios` (ADMIN): lista usuários e permite promover/rebaixar entre `CLIENTE` e `ADMIN`.
+- Enviado **somente quando o pagamento é aprovado**, para o e-mail do cliente que comprou.
+- Assunto: `Pagamento confirmado - Pedido N`.
+- Envio por **Gmail SMTP** (`smtp.gmail.com:587`, STARTTLS) usando uma **senha de app** do Google.
+- Cada envio é gravado na tabela **`TDS_TB_EMAIL_LOG`**: pedido, destinatário, assunto, status (`ENVIADO` ou `FALHA`), mensagem de erro e data/hora. Assim há controle do que foi enviado.
 
 ---
 
-## Endpoints
+## Telas
 
-| Método | Rota | Acesso | Descrição |
+| Tela | Endereço | Quem acessa |
+|---|---|---|
+| Produtos e compra | `http://localhost:8082/produtos` | Todos / logado |
+| **Meus pedidos** (status e motivo) | `http://localhost:8082/meus-pedidos` | Cliente logado |
+| **Ir para o banco** (botão na tela do cliente) | `http://localhost:8082/meu-banco` | Cliente logado |
+| **Banco Tranquilo**: ver saldo e adicionar saldo | `http://localhost:8083/banco` | Cliente |
+| **Dashboard da gerência** | `http://localhost:8082/admin/dashboard` | ADMIN |
+
+O **dashboard da gerência** mostra: total de pedidos, pedidos pagos, vendas, custo e lucro, além de gráficos de **vendas por produto**, **lucro por produto**, **estoque atual** e **pedidos por status**, e a **lista de compras realizadas**.
+
+Na tela do banco, o cliente consulta o saldo e adiciona saldo (sem regras, só soma). O botão "Voltar para a loja" leva de volta ao Mercado Express.
+
+---
+
+## API REST de pedidos e exemplo no Postman
+
+Autenticação **HTTP Basic** (mesmo usuário e senha do login da loja).
+
+| Método | Rota | Descrição | Retorno |
 |---|---|---|---|
-| GET | `/` | Público | Redireciona para `/home` |
-| GET | `/home` | Público | Página inicial |
-| GET | `/home/privado` | Autenticado | Página inicial de usuário logado |
-| GET | `/acesso-negado` | Público | Página exibida quando um usuário autenticado tenta acessar uma rota sem permissão |
-| GET | `/login` | Público | Formulário de login |
-| POST | `/login` | Público | Processa login (gerenciado pelo Spring Security) |
-| GET | `/cadastro` | Público | Formulário de cadastro de usuário |
-| POST | `/cadastro` | Público | Cria novo usuário (papel `CLIENTE`) |
-| GET | `/produtos` | Público | Lista/busca produtos |
-| GET | `/produtos/{id}` | Público | Detalhe de um produto (somente ID numérico) |
-| GET | `/produtos/novo` | ADMIN | Formulário de novo produto |
-| POST | `/produtos` | ADMIN | Cria produto |
-| GET | `/produtos/editar` | ADMIN | Formulário de edição |
-| POST | `/produtos/{id}/editar` | ADMIN | Salva edição |
-| POST | `/produtos/{id}/excluir` | ADMIN | Exclusão lógica do produto |
-| POST | `/produtos/{id}/estoque` | ADMIN | Atualização rápida de estoque |
-| GET | `/produtos/{id}/comprar` | Autenticado | Formulário de compra |
-| POST | `/produtos/{id}/comprar` | Autenticado | Processa a compra, baixa estoque |
-| GET | `/usuarios` | ADMIN | Lista usuários |
-| POST | `/usuarios/{id}/promover` | ADMIN | Promove usuário a `ADMIN` |
-| POST | `/usuarios/{id}/rebaixar` | ADMIN | Rebaixa usuário a `CLIENTE` |
+| POST | `/api/pedidos` | Cria um pedido de compra | `202 Accepted` com o pedido `PENDENTE` |
+| GET | `/api/pedidos` | Lista os pedidos do usuário | `200` |
+| GET | `/api/pedidos/{id}` | Consulta um pedido | `200` ou `404` |
+
+**Requisição JSON de compra** (para o Postman ou Insomnia):
+```http
+POST http://localhost:8082/api/pedidos
+Authorization: Basic <usuario:senha>
+Content-Type: application/json
+
+{
+  "produtoId": 1,
+  "quantidade": 2
+}
+```
+
+**Resposta (`202`):**
+```json
+{
+  "id": 18,
+  "produto": "Saia",
+  "quantidade": 2,
+  "valorTotal": 79.98,
+  "status": "PENDENTE",
+  "motivo": null
+}
+```
+
+Depois de alguns segundos, `GET /api/pedidos/18` retorna `"status": "PAGO"` com `"motivo": "Pagamento aprovado"` (ou `RECUSADO`, com o motivo).
+
+Se o produto não existir ou o estoque acabar, a API responde `400` com `{"erro": "Produto indisponivel ou estoque insuficiente"}`.
+
+A coleção do Postman está em `docs/postman/` (arquivo `.json`, para importar).
 
 ---
 
-## Tratamento de erros
+## Banco de dados
 
-- **Login inválido:** redireciona para `/login?error=true`, exibindo mensagem de erro na própria tela (sem expor detalhes técnicos ao usuário).
-- **Acesso negado:** usuários sem permissão para uma rota são redirecionados para `/acesso-negado`, uma página dedicada e estilizada (não a página padrão de erro do Spring).
-- **Produto/usuário não encontrado:** tratado de forma centralizada, evitando erros genéricos (`500`) na tela.
-- **Busca sem resultado:** exibe mensagem amigável ("Nenhum produto encontrado para '...'") no lugar da tabela, em vez de deixar a tela em branco.
+| Tabela | Aplicação | Conteúdo |
+|---|---|---|
+| `TDS_TB_MERCADO` | loja | Produtos, preço, custo e estoque |
+| `TDS_TB_USUARIO` | loja | Usuários, e-mail e papel |
+| `TDS_TB_PEDIDO` | loja | Pedidos, status e motivo (`MOTIVO`) |
+| `TDS_TB_EMAIL_LOG` | loja | Controle de envio de e-mails |
+| `TDS_TB_CONTA_BANCO` | worker | Contas do Banco Tranquilo (e-mail, titular, saldo) |
 
----
+As tabelas da loja são criadas pelo **Flyway** (`V1` a `V5`). A `TDS_TB_CONTA_BANCO` é criada à mão no SQL Developer:
 
-## Pré-requisitos e como executar localmente
+```sql
+CREATE TABLE TDS_TB_CONTA_BANCO (
+    EMAIL   VARCHAR2(150) PRIMARY KEY,
+    TITULAR VARCHAR2(150),
+    SALDO   NUMBER(12,2) DEFAULT 0 NOT NULL
+);
 
-**Pré-requisitos:**
-- Java 21 (JDK)
-- Maven (ou usar o `./mvnw` incluso no projeto)
-- Acesso ao banco Oracle FIAP (`ORACLE_FIAP`), com usuário e senha válidos
-
-**Passos:**
-1. Clone o repositório.
-2. Configure as variáveis de ambiente `DB_USERNAME` e `DB_PASSWORD` com suas credenciais do Oracle FIAP.
-3. Execute a classe `MercadoExpressApplication`.
-4. A aplicação sobe em `http://localhost:8082`.
-5. Acesse pelo navegador — não é necessário Postman/Insomnia, toda a navegação é feita pela interface Web.
-
----
-
-## Segurança e boas práticas
-
-- **Nenhuma credencial é versionada no código.** Usuário e senha do Oracle são lidos via variáveis de ambiente (`${DB_USERNAME}`, `${DB_PASSWORD}`), tanto localmente quanto em produção (painel de variáveis do Render).
-- **Senhas de usuários** armazenadas com hash `BCrypt`, nunca em texto puro.
-- **Controle de acesso por papel (role-based)** via Spring Security, com rotas administrativas protegidas por `hasRole("ADMIN")`.
-- **Path variables de ID restritas a números** (`{id:[0-9]+}`) nas rotas públicas de leitura de produto, evitando que segmentos de texto (como `novo` ou `editar`) sejam incorretamente reconhecidos como um ID e liberados publicamente.
-- **CSRF habilitado** (padrão do Spring Security) — todos os formulários de POST incluem o token CSRF.
+INSERT INTO TDS_TB_CONTA_BANCO (EMAIL, TITULAR, SALDO) VALUES ('cliente1@email.com', 'Cliente 1', 500);
+INSERT INTO TDS_TB_CONTA_BANCO (EMAIL, TITULAR, SALDO) VALUES ('cliente2@email.com', 'Cliente 2', 20);
+COMMIT;
+```
 
 ---
 
-## Deploy
+## Como rodar
 
-🔗 Link da aplicação em produção (Render): https://mercado-express-957x.onrender.com
+### Pré-requisitos
+- JDK 21 ou superior
+- Maven (ou `mvnw`)
+- **Docker Desktop** ligado
+- Acesso ao Oracle da FIAP
+- Conta Gmail com **verificação em duas etapas** e uma **senha de app** (Conta Google → Segurança → Senhas de app)
 
-Deploy realizado via **Docker** no [Render](https://render.com/), com um `Dockerfile` multi-stage: a primeira etapa compila o projeto com Maven, a segunda roda apenas o `.jar` final sobre uma imagem JRE enxuta.
+### 1. Variáveis de ambiente
+Cada aplicação usa as variáveis abaixo. No IntelliJ: **Run → Edit Configurations →** campo **Environment variables** (**não** use o campo "Active profiles").
 
-**Observações sobre o ambiente de produção:**
-- O plano utilizado é o **Free Tier** do Render, que hiberna a aplicação após períodos de inatividade — a primeira requisição após esse período pode demorar cerca de 1 minuto para responder, enquanto a instância "acorda".
-- A porta é configurada dinamicamente via variável de ambiente `PORT`, injetada automaticamente pelo Render (`server.port=${PORT:8082}`).
+| Aplicação | Variáveis |
+|---|---|
+| Loja | `DB_USERNAME`, `DB_PASSWORD`, `MAIL_USERNAME` (Gmail completo), `MAIL_PASSWORD` (senha de app, 16 letras, sem espaços) |
+| Banco Tranquilo | `DB_USERNAME`, `DB_PASSWORD` |
+
+Exemplo na loja:
+```
+DB_USERNAME=RM563403;DB_PASSWORD=sua_senha;MAIL_USERNAME=seu@gmail.com;MAIL_PASSWORD=abcdefghijklmnop
+```
+
+### 2. Passo a passo (nesta ordem)
+
+1. **RabbitMQ (Docker)**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+   Confira em http://localhost:15672 (`guest` / `guest`).
+
+2. **Contas do Banco Tranquilo:** rode o SQL da seção [Banco de dados](#banco-de-dados) no SQL Developer e inclua também a conta do seu usuário da loja (com o mesmo e-mail do cadastro), por exemplo:
+   ```sql
+   INSERT INTO TDS_TB_CONTA_BANCO (EMAIL, TITULAR, SALDO) VALUES ('seu@email.com', 'Seu Nome', 1000);
+   COMMIT;
+   ```
+
+3. **Loja:** execute `MercadoExpressApplication` (raiz do repositório). Porta **8082**. O Flyway cria as tabelas na primeira vez.
+
+4. **Banco Tranquilo:** abra a pasta `banco-tranquilo-worker` em outra janela do IntelliJ e execute `BancoTranquiloWorkerApplication`. Porta **8083**.
+
+5. **Teste:**
+    - Entre na loja (`http://localhost:8082`), faça login e compre um produto.
+    - Veja o pedido em **Meus pedidos**: `PENDENTE` → `PAGO`.
+    - Confira o e-mail na caixa de entrada.
+    - Para ver a recusa, compre um valor maior que o saldo (ex.: conta com R$ 20).
+    - Para recarregar o saldo, use a tela do banco ou o SQL:
+      ```sql
+      UPDATE TDS_TB_CONTA_BANCO SET SALDO = 1000 WHERE LOWER(EMAIL) = 'seu@email.com';
+      COMMIT;
+      ```
+
+6. **Demonstração do desacoplamento:** pare o Banco Tranquilo, faça uma compra (fica `PENDENTE` e a mensagem espera na fila do RabbitMQ). Suba o Banco Tranquilo de novo e o pedido vira `PAGO`.
+
+### Observações
+- Os dois apps precisam estar rodando ao mesmo tempo.
+- Se o Oracle reclamar de limite de sessões (`ORA-02391`), feche conexões abertas no SQL Developer. Os apps usam um pool pequeno do HikariCP para evitar isso.
+- A Parte 2 roda **localmente** (o deploy exigido está na Parte 1).
 
 ---
 
-## Link yotube
+## Prints
 
-https://youtu.be/tBNKSl6JxDY
+> Troque os caminhos pelas imagens reais, em `docs/prints/parte-2/`.
+
+**Spring Initializr: loja**
+![Initializr loja](docs/prints/parte-2/initializr-loja.png)
+
+**Spring Initializr: Banco Tranquilo**
+![Initializr banco](docs/prints/parte-2/initializr-banco.png)
+
+**RabbitMQ: filas**
+![Filas](docs/prints/parte-2/rabbit-filas.png)
+
+**RabbitMQ: exchanges**
+![Exchanges](docs/prints/parte-2/rabbit-exchanges.png)
+
+**RabbitMQ: conexões**
+![Conexões](docs/prints/parte-2/rabbit-conexoes.png)
+
+**Compra: pedido pendente e depois pago**
+![Meus pedidos](docs/prints/parte-2/meus-pedidos.png)
+
+**Pedido recusado por saldo insuficiente**
+![Recusado](docs/prints/parte-2/recusado.png)
+
+**Postman: POST (202)**
+![Postman POST](docs/prints/parte-2/postman-post.png)
+
+**Postman: GET**
+![Postman GET](docs/prints/parte-2/postman-get.png)
+
+**E-mail de confirmação recebido**
+![E-mail](docs/prints/parte-2/email.png)
+
+**Tela do Banco Tranquilo**
+![Banco](docs/prints/parte-2/banco.png)
+
+**Dashboard da gerência**
+![Dashboard](docs/prints/parte-2/dashboard.png)
+
+**Tabelas no SQL Developer (pedido, e-mail log, conta)**
+![Tabelas](docs/prints/parte-2/sql.png)
+
+**Console do Banco Tranquilo aprovando e recusando**
+![Console](docs/prints/parte-2/console-banco.png)
+
+---
+
+## Segurança
+
+- **Nenhuma credencial vai para o repositório.** Usuário e senha do Oracle, e-mail e senha de app do Gmail vêm de variáveis de ambiente.
+- As informações de configuração do banco foram enviadas ao professor separadamente, pelo Teams.
+- Senhas dos usuários da loja usam BCrypt.
+- A API de pedidos exige autenticação e cada usuário só vê os próprios pedidos.
