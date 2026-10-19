@@ -28,7 +28,7 @@ As duas partes do CP5 estão em **branches separadas**. Esta página (`main`) re
 | **Parte 2** | Microsserviços com **RabbitMQ**, Banco Tranquilo, e-mail e dashboard | `developCP5/parte-2` | https://github.com/luisa-ganasevici/mercado-express/tree/developCP5/parte-2 |
 
 - **Deploy da Parte 1 (Render):** https://mercado-express-957x.onrender.com (a Render segue a branch `developCP5/parte-1`)
-- **Vídeo da Parte 2 (5 a 7 min):** _colocar aqui o link do YouTube (não listado)_
+- **Vídeo da Parte 2 (5 a 7 min):** https://youtu.be/kaKKiUpkOSM
 
 Para baixar cada parte:
 ```bash
